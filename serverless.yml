@@ -1,0 +1,44 @@
+service: ais-api
+
+package:
+  patterns:
+    - "!test.js"
+    - "!test-*.js"
+    - "!*.test.js"
+    - "!tests/**"
+    - "!coverage/**"
+    - "!docs/**"
+    - "!*.md"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: eu-west-3
+  stage: ${opt:stage, 'dev'}
+  timeout: 25
+  memorySize: 512
+  logs:
+    httpApi: false  # Disable HTTP API access logs
+  httpApi:
+    cors:
+      allowedOrigins:
+        - "*"
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+        - X-Requested-With
+        - keypublic
+        - keyprivate
+      allowedMethods:
+        - POST
+        - OPTIONS
+        - GET
+
+functions:
+  token:
+    handler: Handlers/token.token
+    events:
+      - httpApi:
+          path: /token
+          method: post
+
