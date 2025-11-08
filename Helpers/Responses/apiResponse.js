@@ -1,14 +1,5 @@
 "use strict";
 
-const { getErrorMessage } = require("./messages");
-
-/**
- * Create a standardized API response
- * @param {boolean} success - Whether the operation was successful
- * @param {any} data - The response data (for success) or error message (for failure)
- * @param {string} message - Optional message
- * @returns {Object} - Standardized Lambda response object
- */
 function createApiResponse(success, data, message = null) {
   const result = {
     boolean: success,

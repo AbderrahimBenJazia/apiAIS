@@ -7,10 +7,7 @@ const createApiResponse = require("../Helpers/Responses/apiResponse");
 const record = require("../Helpers/Database/record");
 const { normalizeHeaders } = require("../Helpers/General/normalizeHeaders");
 const { MESSAGES } = require("../Helpers/Responses/messages");
-
-const getHeaderValue = (headerValue) => {
-  return Array.isArray(headerValue) ? headerValue[0] : headerValue;
-};
+const { getHeaderValue } = require("../Helpers/General/normalizeHeaders");
 
 const validateAuthKeys = (keyPublic, keyPrivate) => {
   // Check if required headers exist
@@ -53,7 +50,7 @@ function sanitizeHeaders(headers) {
   return sanitized;
 }
 
-async function token(event) {
+async function createToken(event) {
   let headers = {};
   let ip = null;
   let keyPublic = null;
@@ -66,8 +63,8 @@ async function token(event) {
     headers = normalizeHeaders(headers);
 
     // Extract keys early for logging purposes (normalizeHeaders converts to Keypublic/Keyprivate format)
-    keyPublic = getHeaderValue(headers.Keypublic) ;
-    keyPrivate = getHeaderValue(headers.Keyprivate) ;
+    keyPublic = getHeaderValue(headers.Keypublic);
+    keyPrivate = getHeaderValue(headers.Keyprivate);
 
     // Validate authentication keys
     const validation = validateAuthKeys(keyPublic, keyPrivate);
@@ -102,7 +99,6 @@ async function token(event) {
 
     // Use secure comparison to prevent timing attacks
     const isValidCredentials = secureCompare(keyPrivate, api?.keyPrivate);
-
 
     if (!isValidCredentials) {
       const infos = {
@@ -153,11 +149,7 @@ async function token(event) {
 
     record(infos, "token");
 
-    return createApiResponse(
-      true,
-      token,
-      MESSAGES.SUCCESSFUL_AUTHENTICATION
-    );
+    return createApiResponse(true, token, MESSAGES.SUCCESSFUL_AUTHENTICATION);
   } catch (e) {
     // For debugging purposes, log more details in the bugs collection
     // Extract keys if they exist for debugging
@@ -177,17 +169,4 @@ async function token(event) {
   }
 }
 
-module.exports = { token };
-
-const main = async () => {
-  const headers = {
-
-  };
-
-  const response = await token({ headers });
-
-    console.log(response);
-};
-
-main();
-
+module.exports = { createToken };

@@ -36,8 +36,7 @@ provider:
 
 functions:
   token:
-    handler: Handlers/token.token
-    events:
+    handler: Handlers/token.createToken
       - httpApi:
           path: /token
           method: post

@@ -12,4 +12,9 @@ const normalizeHeaders = (headers) => {
 
   return normalizedHeaders;
 };
-module.exports = { normalizeHeaders };
+
+const getHeaderValue = (headerValue) => {
+  return Array.isArray(headerValue) ? headerValue[0] : headerValue;
+};
+
+module.exports = { normalizeHeaders, getHeaderValue };
