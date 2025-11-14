@@ -16,6 +16,7 @@ const MESSAGES = {
   INTERNAL_ERROR: "Erreur interne du serveur",
   UNAUTHORIZED_ACCESS: "Accès non autorisé",
   TOKEN_EXPIRED: "Le token utilisé est invalide.",
+  INVALID_BODY :"Invalid JSON in request body"
 };
 
 module.exports = {

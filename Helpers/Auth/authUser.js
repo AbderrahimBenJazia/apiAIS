@@ -4,7 +4,7 @@ const { connectToDatabase } = require("../Database/mongoConnexion");
 const createApiResponse = require("../Responses/apiResponse");
 const { MESSAGES } = require("../Responses/messages");
 const { getHeaderValue } = require("../General/normalizeHeaders");
-const {normalizeHeaders} = require("../General/normalizeHeaders");
+const { normalizeHeaders } = require("../General/normalizeHeaders");
 const userProjections = {
   _id: 1,
   "api.token": 1,
@@ -17,9 +17,8 @@ const userProjections = {
 };
 
 const authUser = async (headers) => {
-  headers = normalizeHeaders(headers);
-
-  const token = getHeaderValue(headers.token);
+  
+  const token = getHeaderValue(headers.Token);
 
   const infos = {
     isAuthnenticated: false,
@@ -62,16 +61,3 @@ const authUser = async (headers) => {
 };
 
 module.exports = { authUser };
-
-const main = async () => {
-  const token = "AIS_v4zvi1dMmI0HnbPlj6NTgvEBbeJC3oR7j9yb58giyPz62e3PsH";
-  const authInfo = await authUser(token);
-
-  if (authInfo.isAuthnenticated) {
-    console.log("User is authenticated:", authInfo.userData);
-  } else {
-    console.log("Authentication failed:", authInfo.response);
-  }
-};
-
-main();

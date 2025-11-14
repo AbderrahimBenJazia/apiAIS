@@ -12,7 +12,7 @@ const main = async () => {
 
   console.log("***********new function*********");
   try {
-    const response = await axios.post(url, {}, {  });
+    const response = await axios.post(url, {}, { headers });
 
     console.log(response.data);
   } catch (error) {
@@ -25,7 +25,7 @@ const main = async () => {
 
   console.log("***********old function*********");
   try {
-    const response = await axios.post(urlMongo, {}, {});
+    const response = await axios.post(urlMongo, {}, {headers});
 
     console.log(response.data);
   } catch (error) {

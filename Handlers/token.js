@@ -8,6 +8,10 @@ const record = require("../Helpers/Database/record");
 const { normalizeHeaders } = require("../Helpers/General/normalizeHeaders");
 const { MESSAGES } = require("../Helpers/Responses/messages");
 const { getHeaderValue } = require("../Helpers/General/normalizeHeaders");
+const { createLogInfo } = require("../Helpers/General/createLogInfo");
+const {
+  extractRequestContext,
+} = require("../Helpers/General/extractRequestContext");
 
 const validateAuthKeys = (keyPublic, keyPrivate) => {
   // Check if required headers exist
@@ -41,15 +45,6 @@ const validateAuthKeys = (keyPublic, keyPrivate) => {
   };
 };
 
-function sanitizeHeaders(headers) {
-  const sanitized = { ...headers };
-  delete sanitized.Keypublic;
-  delete sanitized.Keyprivate;
-  delete sanitized.Authorization;
-
-  return sanitized;
-}
-
 async function createToken(event) {
   let headers = {};
   let ip = null;
@@ -57,10 +52,7 @@ async function createToken(event) {
   let keyPrivate = null;
 
   try {
-    headers = { ...event.headers };
-    ip = headers["x-forwarded-for"] || headers["X-Forwarded-For"];
-
-    headers = normalizeHeaders(headers);
+    const { ip, headers } = extractRequestContext(event);
 
     // Extract keys early for logging purposes (normalizeHeaders converts to Keypublic/Keyprivate format)
     keyPublic = getHeaderValue(headers.Keypublic);
@@ -70,13 +62,12 @@ async function createToken(event) {
     const validation = validateAuthKeys(keyPublic, keyPrivate);
 
     if (!validation.valid) {
-      const infos = {
+      const infos = createLogInfo({
         ip,
         request: "token",
         keyPublic,
         keyPrivate,
-        date: new Date(),
-      };
+      });
       record(infos, "failedtoken");
       return validation.error;
     }
@@ -101,13 +92,12 @@ async function createToken(event) {
     const isValidCredentials = secureCompare(keyPrivate, api?.keyPrivate);
 
     if (!isValidCredentials) {
-      const infos = {
+      const infos = createLogInfo({
         ip,
         request: "token",
         keyPublic,
-        keyPrivate, // Log keyPrivate for security monitoring and debugging
-        date: new Date(),
-      };
+        keyPrivate,
+      });
 
       record(infos, "failedtoken");
 
@@ -139,28 +129,26 @@ async function createToken(event) {
         );
     }
 
-    const infos = {
+    const infos = createLogInfo({
       ip,
       request: "token",
-      headers: sanitizeHeaders(headers), // Sanitize headers before logging
-      error: undefined,
-      professional: professional || null,
-    };
+      headers,
+      professional,
+    });
 
     record(infos, "token");
 
     return createApiResponse(true, token, MESSAGES.SUCCESSFUL_AUTHENTICATION);
   } catch (e) {
     // For debugging purposes, log more details in the bugs collection
-    // Extract keys if they exist for debugging
-    const infos = {
-      ip: ip || null,
+    const infos = createLogInfo({
+      ip,
       request: "token",
       keyPublic,
       keyPrivate,
-      headers: sanitizeHeaders(headers || {}),
+      headers,
       error: e.message || e,
-    };
+    });
 
     record(infos, "bugs");
 
