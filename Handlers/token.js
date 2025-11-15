@@ -4,46 +4,14 @@ const { connectToDatabase } = require("../Helpers/Database/mongoConnexion");
 const generateToken = require("../Helpers/Auth/generateToken");
 const secureCompare = require("../Helpers/Auth/secureCompare");
 const createApiResponse = require("../Helpers/Responses/apiResponse");
-const record = require("../Helpers/Database/record");
-const { normalizeHeaders } = require("../Helpers/General/normalizeHeaders");
 const { MESSAGES } = require("../Helpers/Responses/messages");
 const { getHeaderValue } = require("../Helpers/General/normalizeHeaders");
-const { createLogInfo } = require("../Helpers/General/createLogInfo");
+const { tokenLogger } = require("../Helpers/General/tokenLogger");
 const {
   extractRequestContext,
 } = require("../Helpers/General/extractRequestContext");
 
-const validateAuthKeys = (keyPublic, keyPrivate) => {
-  // Check if required headers exist
-  if (keyPublic === undefined || keyPrivate === undefined) {
-    return {
-      valid: false,
-      error: createApiResponse(false, null, MESSAGES.NO_KEYS_PROVIDED),
-    };
-  }
-
-  // Validate that keys are strings and not empty
-  if (typeof keyPublic !== "string" || typeof keyPrivate !== "string") {
-    return {
-      valid: false,
-      error: createApiResponse(false, null, MESSAGES.INVALID_CREDENTIALS),
-    };
-  }
-
-  if (keyPublic.trim() === "" || keyPrivate.trim() === "") {
-    return {
-      valid: false,
-      error: createApiResponse(false, null, MESSAGES.INVALID_CREDENTIALS),
-    };
-  }
-
-  return {
-    valid: true,
-    keyPublic: keyPublic.trim(),
-    keyPrivate: keyPrivate.trim(),
-    error: null,
-  };
-};
+const { validateAuthKeys } = require("../Helpers/Auth/validateAuthKeys");
 
 async function createToken(event) {
   let headers = {};
@@ -62,13 +30,11 @@ async function createToken(event) {
     const validation = validateAuthKeys(keyPublic, keyPrivate);
 
     if (!validation.valid) {
-      const infos = createLogInfo({
-        ip,
-        request: "token",
+      tokenLogger(ip, headers, "failedtoken", {
         keyPublic,
         keyPrivate,
+        error: validation?.error?.message,
       });
-      record(infos, "failedtoken");
       return validation.error;
     }
 
@@ -92,14 +58,11 @@ async function createToken(event) {
     const isValidCredentials = secureCompare(keyPrivate, api?.keyPrivate);
 
     if (!isValidCredentials) {
-      const infos = createLogInfo({
-        ip,
-        request: "token",
+      tokenLogger(ip, headers, "failedtoken", {
         keyPublic,
         keyPrivate,
+        error: "Invalid private key",
       });
-
-      record(infos, "failedtoken");
 
       return createApiResponse(false, null, MESSAGES.INVALID_CREDENTIALS);
     }
@@ -129,28 +92,16 @@ async function createToken(event) {
         );
     }
 
-    const infos = createLogInfo({
-      ip,
-      request: "token",
-      headers,
-      professional,
-    });
-
-    record(infos, "token");
+    tokenLogger(ip, headers, "token", { professional });
 
     return createApiResponse(true, token, MESSAGES.SUCCESSFUL_AUTHENTICATION);
   } catch (e) {
     // For debugging purposes, log more details in the bugs collection
-    const infos = createLogInfo({
-      ip,
-      request: "token",
+    tokenLogger(ip, headers, "bugs", {
       keyPublic,
       keyPrivate,
-      headers,
       error: e.message || e,
     });
-
-    record(infos, "bugs");
 
     // Return generic error message to prevent information leakage
     return createApiResponse(false, null, MESSAGES.INTERNAL_ERROR);

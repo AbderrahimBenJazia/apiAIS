@@ -1,17 +1,17 @@
 const axios = require("axios");
 
 const url =
-  "https://zyi0sssm11.execute-api.eu-west-3.amazonaws.com/invoiceRead";
+  "https://zyi0sssm11.execute-api.eu-west-3.amazonaws.com/customerRead";
 
 const urlMongo =
-  "https://data.mongodb-api.com/app/apiais-xmjrj/endpoint/invoiceRead";
+  "https://data.mongodb-api.com/app/apiais-xmjrj/endpoint/customerRead";
 
 const main = async () => {
   const headers = {
-    token:"AIS_vg7sLj2ZsMBd8OoS8xKWWFrYlzuXq3Qyw2I0LDEdNIyNdKJpwm"
+    token:"AIS_5YxZK-AESKB-Tby5M-1fcoy-gXNbg-m0TnR-TVETP-YcSK5-aBffx-bA"
   };
 
-  const body={numFactureTiers: '25354_2025-11-15_11:31:52_821989771421',}
+  const body={}
 
   console.log("***********new function*********");
   try {

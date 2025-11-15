@@ -16,18 +16,18 @@ const { buildDataResponse } = require("../dataReader/buildDataResponse");
 const { logActivity } = require("../General/logActivity");
 
 async function getData(event, { readCollection, logCollection, projection }) {
-  let context = {};
+  const { headers, ip } = extractRequestContext(event);
+
+  let context = { ip, userData: null };
 
   try {
-    const { headers, ip } = extractRequestContext(event);
-
     const authResponse = await authUser(headers);
 
     if (!authResponse.isAuthnenticated) {
       return authResponse.response;
     }
 
-    context = { ip, headers, userData: authResponse.userData };
+    context = { ip, professional: authResponse.userData.professional };
 
     const { body, pagination } = parseRequestBody(
       event,
@@ -59,8 +59,8 @@ async function getData(event, { readCollection, logCollection, projection }) {
       pagination
     );
 
-    logActivity(context, logCollection, {
-      body: sanitizedFilter,
+    await logActivity(context, logCollection, {
+      body,
       pagination,
       resultsCount: data.length,
       totalRecords: totalCount,
@@ -76,10 +76,9 @@ async function getData(event, { readCollection, logCollection, projection }) {
       paginationMeta
     );
   } catch (error) {
-    console.error("Error in getData:", error);
     // Handle all errors in one place
-    logActivity(context, logCollection, {
-      body: event.body,
+    await logActivity(context, logCollection, {
+      body: JSON.parse(event.body),
       error: error.message || error,
     });
 
@@ -90,7 +89,7 @@ async function getData(event, { readCollection, logCollection, projection }) {
 
     return createApiResponse(
       false,
-      isValidationError ? [] : undefined, // backward compatible
+      [],
       isValidationError
         ? error.message
         : `[${logCollection}] ${MESSAGES.INTERNAL_ERROR}`
