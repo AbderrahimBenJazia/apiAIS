@@ -3,7 +3,7 @@
 const { MESSAGES } = require("../Responses/messages");
 const { createLogInfo } = require("../General/createLogInfo");
 const record = require("../Database/record");
-const { parsePagination } = require("../DataReader/parsePagination");
+const { parsePagination } = require("../dataReader/parsePagination");
 
 const parseRequestBody = (
   event,

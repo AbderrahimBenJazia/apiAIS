@@ -37,7 +37,19 @@ provider:
 functions:
   token:
     handler: Handlers/token.createToken
+    events:
       - httpApi:
           path: /token
           method: post
-
+  customerRead:
+    handler: Handlers/customerRead.customerRead
+    events:
+      - httpApi:
+          path: /customerRead
+          method: post
+  invoiceRead:
+    handler: Handlers/invoiceRead.invoiceRead
+    events:
+      - httpApi:
+          path: /invoiceRead
+          method: post

@@ -1,11 +1,16 @@
 "use strict";
 
-function createApiResponse(success, data, message = null) {
+function createApiResponse(success, data, message = null, pagination = null) {
   const result = {
     boolean: success,
     data,
     message,
   };
+
+  // Add pagination at top level if provided
+  if (pagination) {
+    result.pagination = pagination;
+  }
 
   return {
     statusCode: 200, // Always return 200 status

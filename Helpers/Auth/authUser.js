@@ -23,7 +23,7 @@ const authUser = async (headers) => {
   const infos = {
     isAuthnenticated: false,
     userData: null,
-    response: createApiResponse(false, null, MESSAGES.UNAUTHORIZED_ACCESS),
+    response: createApiResponse(false, undefined, MESSAGES.UNAUTHORIZED_ACCESS),
   };
 
   if (!token || typeof token !== "string") {
@@ -48,8 +48,8 @@ const authUser = async (headers) => {
   if (isTokenExpired) {
     return {
       isAuthnenticated: false,
-      userData: null,
-      response: createApiResponse(false, null, MESSAGES.TOKEN_EXPIRED),
+      userData: undefined,
+      response: createApiResponse(false, undefined, MESSAGES.TOKEN_EXPIRED),
     };
   }
 

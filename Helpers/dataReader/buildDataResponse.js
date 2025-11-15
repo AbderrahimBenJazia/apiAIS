@@ -9,7 +9,7 @@ const calculatePaginationMetadata = (totalRecords, pagination) => {
 };
 
 /**
- * Build the response object
+ * Build the response object with flat structure for backward compatibility
  */
 const buildDataResponse = (data, pagination, totalRecords) => {
   const { totalPages, hasNextPage, hasPrevPage } = calculatePaginationMetadata(
@@ -18,8 +18,8 @@ const buildDataResponse = (data, pagination, totalRecords) => {
   );
 
   return {
-    data,
-    pagination: {
+    data,                    // ← Direct array (backward compatible)
+    pagination: {            // ← Pagination at top level
       page: pagination.page,
       limit: pagination.limit,
       totalRecords,
