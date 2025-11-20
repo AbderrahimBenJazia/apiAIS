@@ -30,17 +30,6 @@ async function customerWrite(event) {
   return createApiResponse(true, tokenResponse.token, "URSSAF TOKEN RETRIEVED");
 }
 
-const main = async () => {
-  const event = {
-    headers: {
-      token: "AIS_5YxZK-AESKB-Tby5M-1fcoy-gXNbg-m0TnR-TVETP-YcSK5-aBffx-bA",
-    },
-  };
 
-  const response = await customerWrite(event);
-  console.log(response);
-};
-
-main();
 
 module.exports = { customerWrite };

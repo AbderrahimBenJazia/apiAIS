@@ -6,3 +6,9 @@ coverage/
 *.log
 .vscode/
 .idea/
+
+# Test files
+test.js
+testRead.js
+testCustomer.js
+tests/

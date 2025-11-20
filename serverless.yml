@@ -53,3 +53,9 @@ functions:
       - httpApi:
           path: /invoiceRead
           method: post
+  customerWrite:
+    handler: Handlers/customerWrite.customerWrite
+    events:
+      - httpApi:
+          path: /customerWrite
+          method: post
