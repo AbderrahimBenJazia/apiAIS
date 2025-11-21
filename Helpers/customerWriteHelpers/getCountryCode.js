@@ -398,15 +398,25 @@ const countriesList = {
   VANUATU: 99514,
 };
 
-const getCountryCode = (countryName) => {
+getCountryCode = (countryName) => {
   if (!countryName || typeof countryName !== "string") {
     return { country: null, code: null };
   }
+  
+  // Normalize country name: uppercase, remove accents, remove spaces/special chars
+  let normalized = countryName
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")  // Remove accents
+    .replace(/[^A-Z0-9]/g, "");      // Keep only letters and numbers
 
-  const normalizedCountryName = countryName.toUpperCase().replace(/\s+/g, "");
+  // Lookup in countries list 
+  const code = normalized in countriesList ? countriesList[normalized] : null;
 
-  const code = countriesList[normalizedCountryName] || null;
-
-  return { country: normalizedCountryName, code };
+  return { 
+    country: code ? normalized : null, 
+    code 
+  };
 };
 
+module.exports = { getCountryCode };
