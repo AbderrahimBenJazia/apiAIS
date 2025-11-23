@@ -50,7 +50,7 @@ const processCommuneName = (communeName, keepIslands) => {
   return cleanCommune;
 };
 
-const communeSearchInsee = async (communeName, keepIslands = true) => {
+const communeSearchInsee = async (communeName, postalCode = null, keepIslands = true) => {
   try {
     // Input validation
     if (!communeName || typeof communeName !== "string") {
@@ -63,9 +63,26 @@ const communeSearchInsee = async (communeName, keepIslands = true) => {
     const client = await connectToDatabase();
     const db = client.db("api");
 
+    // Build the query filter
+    const queryFilter = { nomSearch: cleanCommune };
+
+    // Add department filter if postal code is provided
+    if (postalCode) {
+      const cleanPostalCode = postalCode.toString().trim();
+      // Extract department number (first 2 or 3 digits for DOM-TOM)
+      const departement2Digits = cleanPostalCode.slice(0, 2);
+      const departement3Digits = cleanPostalCode.slice(0, 3);
+      
+      // Search for either 2-digit (metropolitan France) or 3-digit (DOM-TOM) department codes
+      queryFilter.$or = [
+        { departement: departement2Digits },
+        { departement: departement3Digits }
+      ];
+    }
+
     const communeResults = await db
       .collection("customerWriteCodeCommune")
-      .find({ nomSearch: cleanCommune })
+      .find(queryFilter)
       .toArray();
 
     if (!Array.isArray(communeResults) || communeResults.length === 0) {
@@ -81,7 +98,7 @@ const communeSearchInsee = async (communeName, keepIslands = true) => {
     return searchResults;
   } catch (error) {
     console.error(
-      `[communeSearchInsee] Error searching commune "${communeName}"`,
+      `[communeSearchInsee] Error searching commune "${communeName}"${postalCode ? ` in department "${postalCode.toString().slice(0, 2)}/${postalCode.toString().slice(0, 3)}"` : ''}`,
       error.message
     );
     return [];
@@ -90,9 +107,4 @@ const communeSearchInsee = async (communeName, keepIslands = true) => {
 
 module.exports = { communeSearchInsee };
 
-const main = async () => {
-  const results = await communeSearchInsee("AMAREINS");
-  console.log(results);
-};
 
-main();

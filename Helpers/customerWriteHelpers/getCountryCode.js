@@ -398,7 +398,7 @@ const countriesList = {
   VANUATU: 99514,
 };
 
-getCountryCode = (countryName) => {
+const getCountryCode = (countryName) => {
   if (!countryName || typeof countryName !== "string") {
     return { country: null, code: null };
   }
