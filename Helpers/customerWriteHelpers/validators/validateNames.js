@@ -1,9 +1,10 @@
 "use strict";
 
 const { nameFormat } = require("../nameFormat");
+const { validateField } = require('./validateFieldUtils');
 
 const validateNameField = (value, fieldName, isRequired = true) => {
-  // Required field validation
+  // Handle optional fields
   if (!value) {
     if (isRequired) {
       return {
@@ -14,13 +15,9 @@ const validateNameField = (value, fieldName, isRequired = true) => {
     return { isValid: true, value: null }; // Optional field, no value
   }
 
-  // Type safety check - names must be strings only
-  if (typeof value !== "string") {
-    return {
-      isValid: false,
-      errorMessage: `[${fieldName}] doit être une chaîne de caractères`,
-    };
-  }
+  // Use shared field validation for type checking (strings only for names)
+  const fieldValidation = validateField(value, fieldName, false);
+  if (!fieldValidation.isValid) return fieldValidation;
 
   // Normalize the name using nameFormat
   const normalizedName = nameFormat(value, false, false);

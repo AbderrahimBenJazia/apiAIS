@@ -1,5 +1,7 @@
 "use strict";
 
+const { validateField } = require('./validateFieldUtils');
+
 // Constants for civilité validation
 const CIVILITE = {
   MONSIEUR: {
@@ -22,16 +24,9 @@ CIVILITE.MADAME.variants.forEach((variant) =>
 );
 
 const validateCivilite = (civilite) => {
-  if (!civilite) {
-    return { isValid: false, errorMessage: "[civilite] n'est pas définie" };
-  }
-
-  if (typeof civilite !== "string" && typeof civilite !== "number") {
-    return {
-      isValid: false,
-      errorMessage: "[civilite] doit être une chaîne de caractère ou un nombre",
-    };
-  }
+  // Use shared field validation
+  const fieldValidation = validateField(civilite, "civilite", true);
+  if (!fieldValidation.isValid) return fieldValidation;
 
   const normalized = String(civilite).toLowerCase().replace(/[\s.]/g, "");
 

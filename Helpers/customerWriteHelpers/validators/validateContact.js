@@ -1,5 +1,7 @@
 "use strict";
 
+const { validateField } = require('./validateFieldUtils');
+
 // Contact validation constants and patterns
 const CONTACT_PATTERNS = {
   // French mobile phone: starts with 06, 07 or +336, +337
@@ -13,21 +15,9 @@ const CONTACT_LIMITS = {
 };
 
 const validatePhone = (phone) => {
-  if (!phone) {
-    return {
-      isValid: false,
-      errorMessage: "[numeroTelephonePortable] n'est pas défini",
-    };
-  }
-
-  // Type safety check
-  if (typeof phone !== "string" ) {
-    return {
-      isValid: false,
-      errorMessage:
-        "[numeroTelephonePortable] doit être une chaîne de caractères",
-    };
-  }
+  // Use shared field validation
+  const fieldValidation = validateField(phone, "numeroTelephonePortable", false);
+  if (!fieldValidation.isValid) return fieldValidation;
 
   // Normalize phone number
   const normalized = String(phone)
@@ -46,20 +36,9 @@ const validatePhone = (phone) => {
 };
 
 const validateEmail = (email) => {
-  if (!email) {
-    return {
-      isValid: false,
-      errorMessage: "[adresseMail] n'est pas définie",
-    };
-  }
-
-  // Type safety check
-  if (typeof email !== "string") {
-    return {
-      isValid: false,
-      errorMessage: "[adresseMail] doit être une chaîne de caractères",
-    };
-  }
+  // Use shared field validation
+  const fieldValidation = validateField(email, "adresseMail", false);
+  if (!fieldValidation.isValid) return fieldValidation;
 
   // Normalize email address
   const normalized = email
@@ -103,15 +82,5 @@ const validateContact = (body) => {
   return { isValid: true, values };
 };
 
-const main = () => {
-  const body = {
-    numeroTelephonePortable: "619868950",
-    adresseMail: "exampleple.c",
-  };
-
-  console.log(validateContact(body));
-};
-
-main()
 
 module.exports = { validateContact };

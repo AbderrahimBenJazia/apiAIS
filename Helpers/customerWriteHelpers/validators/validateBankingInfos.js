@@ -1,18 +1,12 @@
 "use strict";
 
 const { nameFormat } = require("../nameFormat");
+const { validateField } = require('./validateFieldUtils');
 
 const validateBankingItem = (value, fieldName, regex) => {
-  if (!value) {
-    return { isValid: false, errorMessage: `[${fieldName}] n'est pas défini` };
-  }
-
-  if (typeof value !== "string" && typeof value !== "number") {
-    return {
-      isValid: false,
-      errorMessage: `[${fieldName}] doit être une chaîne ou un nombre`,
-    };
-  }
+  // Use shared field validation
+  const fieldValidation = validateField(value, fieldName, true);
+  if (!fieldValidation.isValid) return fieldValidation;
 
   const normalizedValue = String(value)
     .toUpperCase()

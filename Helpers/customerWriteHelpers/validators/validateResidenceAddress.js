@@ -7,32 +7,12 @@ const {
 const { communeSearchInsee } = require("../communeSearchInsee");
 const { getArrondissement } = require("../getArrondissement");
 const { validateCountryCode } = require("./validateCountryCode");
+const { validateField } = require("./validateFieldUtils");
 
 const POSTAL_CODE_REGEX = /^[0-9]{5}$/;
 const COMPLEMENT_MAX_LENGTH = 37;
 
-const validateField = (value, fieldName, allowNumber = true) => {
-  if (!value) {
-    return {
-      isValid: false,
-      errorMessage: `[${fieldName}] n'est pas défini`,
-    };
-  }
 
-  const validTypes = allowNumber ? ["string", "number"] : ["string"];
-
-  if (!validTypes.includes(typeof value)) {
-    const expectedType = allowNumber
-      ? "une chaîne de caractères ou un nombre"
-      : "une chaîne de caractères";
-    return {
-      isValid: false,
-      errorMessage: `[${fieldName}] doit être ${expectedType}`,
-    };
-  }
-
-  return { isValid: true };
-};
 
 const validateInputs = (body) => {
   // Extract commune value (either field)

@@ -1,88 +1,170 @@
 "use strict";
 
-const { nameFormat } = require('../nameFormat');
-const { dateFormatUrssaf } = require('../dateFormatUrssaf');
-const { communeSearchInsee } = require('../communeSearchInsee');
-const { getArrondissement } = require('../getArrondissement');
-const { validateCountryCode } = require('./validateCountryCode');
+const { nameFormat } = require("../nameFormat");
+const { dateFormatUrssaf } = require("../dateFormatUrssaf");
+const { communeSearchInsee } = require("../communeSearchInsee");
+const { getArrondissement } = require("../getArrondissement");
+const { validateCountryCode } = require("./validateCountryCode");
+const { validateField } = require("./validateFieldUtils");
+const { communeSearchGeoApiByName } = require("../communeSearchGeoApi");
 
+const validateBirthInputs = (body) => {
+  const validatedValues = {};
+
+  const countryResult = validateCountryCode(
+    body.codePaysNaissance,
+    "codePaysNaissance"
+  );
+
+  if (!countryResult.isValid) return countryResult;
+  validatedValues.codePaysNaissance = countryResult.value;
+
+  // Define all validations in a structured way
+  const validations = [
+    {
+      value: body.dateNaissance,
+      fieldName: "dateNaissance",
+      allowNumber: false,
+      key: "dateNaissance",
+    },
+  ];
+
+  if (countryResult.value === 99100) {
+    validations.push({
+      value: body.libelleCommuneNaissance,
+      fieldName: "libelleCommuneNaissance",
+      allowNumber: false,
+      key: "libelleCommuneNaissance",
+    });
+  }
+
+  // Loop through basic field validations
+  for (const validation of validations) {
+    const result = validateField(
+      validation.value,
+      validation.fieldName,
+      validation.allowNumber
+    );
+    if (!result.isValid) return result;
+    validatedValues[validation.key] = validation.value;
+  }
+
+  return {
+    isValid: true,
+    values: validatedValues,
+  };
+};
+
+const getBirthCommune = async (commune) => {
+  let communeNaissanceList = [];
+
+  // Check arrondissements first (highest priority)
+  const arrondResults = getArrondissement(commune);
+  if (Array.isArray(arrondResults) && arrondResults.length > 0) {
+    communeNaissanceList = arrondResults;
+    return communeNaissanceList;
+  }
+
+  // Search both APIs in parallel to get separate results
+  const communeSearchPromises = [
+    communeSearchGeoApiByName(commune).catch(() => []),
+    communeSearchInsee(commune).catch(() => []),
+  ];
+
+  const [geoApiResults, inseeResults] = await Promise.all(
+    communeSearchPromises
+  );
+
+  // Priority: Use INSEE first, fallback to Geo API if INSEE yields nothing
+  if (Array.isArray(inseeResults) && inseeResults.length > 0) {
+    communeNaissanceList = inseeResults;
+  } else if (Array.isArray(geoApiResults) && geoApiResults.length > 0) {
+    // Filter Geo API results to ensure exact name match
+    const exactMatches = geoApiResults.filter((result) => {
+      if (!result || !result.nom) return false;
+      // Normalize both names for comparison (case-insensitive, trim spaces)
+      const resultName = result.nom.toLowerCase().trim();
+      const searchName = commune.toLowerCase().trim();
+      return resultName === searchName;
+    });
+
+    // Only use Geo API results if we have exact matches
+    if (exactMatches.length > 0) {
+      communeNaissanceList = exactMatches;
+    }
+  }
+
+  // Filter for unique COG codes in the final array
+  if (communeNaissanceList.length > 1) {
+    const seenCodes = new Set();
+    communeNaissanceList = communeNaissanceList.filter((commune) => {
+      if (!commune?.COG || seenCodes.has(commune.COG)) return false;
+      seenCodes.add(commune.COG);
+      return true;
+    });
+  }
+
+  return communeNaissanceList;
+};
 
 const validateBirthInformation = async (body) => {
   const values = {};
-  
-  // Birth date validation
-  if (!body.dateNaissance) {
+
+  // 1. Validate all input fields first
+  const inputValidation = validateBirthInputs(body);
+  if (!inputValidation.isValid) return inputValidation;
+
+  const { dateNaissance, codePaysNaissance, libelleCommuneNaissance } =
+    inputValidation.values;
+
+  // 2. Process and format birth date
+  const formattedDate = dateFormatUrssaf(dateNaissance);
+  if (!formattedDate) {
     return {
       isValid: false,
-      errorMessage: "[dateNaissance] n'est pas définie",
+      errorMessage:
+        "[dateNaissance] doit être au format yyyy-MM-dd ou dd-MM-yyyy",
     };
   }
+  values.dateNaissance = formattedDate;
 
-  const dateNaissance = dateFormatUrssaf(body.dateNaissance);
-
-  if (!dateNaissance) {
-    return {
-      isValid: false,
-      errorMessage: "[dateNaissance] doit être au format 2000-01-01 ou 01-01-2000)",
-    };
-  }
-  values.dateNaissance = dateNaissance;
-
-  // Birth country validation using shared helper
-  const countryResult = validateCountryCode(body.codePaysNaissance, "codePaysNaissance");
-  if (!countryResult.isValid) return countryResult;
-  values.codePaysNaissance = countryResult.value;
-
-  // Birth commune (only for French births)
-  if (values.codePaysNaissance !== 99100) {
-    values.libelleCommuneNaissanceList = [{}]; // Placeholder for foreign births
-  } else {
-    if (!body.libelleCommuneNaissance) {
-      return {
-        isValid: false,
-        errorMessage: "[libelleCommuneNaissance] n'est pas défini",
-      };
-    }
-
-    const libelleCommuneNaissance = nameFormat(
-      body.libelleCommuneNaissance.toString(),
+  // 3. Set country code
+  values.codePaysNaissance = codePaysNaissance;
+  values.libelleCommuneNaissanceList = [];
+  // 4. Handle commune for French births
+  if (codePaysNaissance === 99100) {
+    // French birth - search commune
+    const normalizedCommune = nameFormat(
+      libelleCommuneNaissance.toString(),
       false,
       true
     );
 
-    let libelleCommuneNaissanceList = [];
+    const communeNaissanceList = await getBirthCommune(normalizedCommune);
 
-    try {
-      // Search INSEE database - this async operation could throw
-      const inseeResults = await communeSearchInsee(
-        libelleCommuneNaissance,
-        "naissance"
-      );
-      if (inseeResults) {
-        libelleCommuneNaissanceList.push(...inseeResults);
-      }
-    } catch (error) {
-      // If INSEE search fails, continue with arrondissement search
-      console.warn(`INSEE search failed for ${libelleCommuneNaissance}:`, error);
-    }
-
-    // Search arrondissements - this is synchronous and safe
-    const arrondResults = getArrondissement(libelleCommuneNaissance);
-    if (arrondResults.length > 0) {
-      libelleCommuneNaissanceList.push(...arrondResults);
-    }
-
-    if (libelleCommuneNaissanceList.length === 0) {
+    if (communeNaissanceList.length === 0) {
       return {
         isValid: false,
-        errorMessage: `[libelleCommuneNaissance] Veuillez vérifier la ville de naissance et/ou indiquer l'arrondissement (par exemple Lyon 09) (ici ${body.libelleCommuneNaissance})`,
+        errorMessage: `[libelleCommuneNaissance] Veuillez vérifier la ville de naissance et/ou indiquer l'arrondissement (par exemple Lyon 09) (ici ${libelleCommuneNaissance})`,
       };
     }
 
-    values.libelleCommuneNaissanceList = libelleCommuneNaissanceList;
+    values.libelleCommuneNaissanceList = communeNaissanceList;
   }
 
   return { isValid: true, values };
 };
+
+const main = async () => {
+  const result = await validateBirthInformation({
+    dateNaissance: "15-03-1991",
+    codePaysNaissance: 99100,
+    libelleCommuneNaissance: "Chatenay-Malabry",
+  });
+  console.log(result);
+  console.log(result.values.libelleCommuneNaissanceList)
+};
+
+main()
 
 module.exports = { validateBirthInformation };
