@@ -1,12 +1,14 @@
 "use strict";
 
-const { nameFormat } = require("../nameFormat");
-const { dateFormatUrssaf } = require("../dateFormatUrssaf");
-const { communeSearchInsee } = require("../communeSearchInsee");
-const { getArrondissement } = require("../getArrondissement");
+const { nameFormat } = require("../formatters/nameFormat");
+const { dateFormatUrssaf } = require("../formatters/dateFormatUrssaf");
+const { communeSearchInsee } = require("../communes/communeSearchInsee");
+const { getArrondissement } = require("../communes/getArrondissement");
 const { validateCountryCode } = require("./validateCountryCode");
 const { validateField } = require("./validateFieldUtils");
-const { communeSearchGeoApiByName } = require("../communeSearchGeoApi");
+const {
+  communeSearchGeoApiByName,
+} = require("../communes/communeSearchGeoApi");
 
 const validateBirthInputs = (body) => {
   const validatedValues = {};
@@ -154,17 +156,5 @@ const validateBirthInformation = async (body) => {
 
   return { isValid: true, values };
 };
-
-const main = async () => {
-  const result = await validateBirthInformation({
-    dateNaissance: "15-03-1991",
-    codePaysNaissance: 99100,
-    libelleCommuneNaissance: "Chatenay-Malabry",
-  });
-  console.log(result);
-  console.log(result.values.libelleCommuneNaissanceList)
-};
-
-main()
 
 module.exports = { validateBirthInformation };

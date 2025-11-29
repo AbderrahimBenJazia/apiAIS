@@ -402,21 +402,29 @@ const getCountryCode = (countryName) => {
   if (!countryName || typeof countryName !== "string") {
     return { country: null, code: null };
   }
-  
+
   // Normalize country name: uppercase, remove accents, remove spaces/special chars
   let normalized = countryName
     .toUpperCase()
     .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")  // Remove accents
-    .replace(/[^A-Z0-9]/g, "");      // Keep only letters and numbers
+    .replace(/\p{Diacritic}/gu, "") // Remove accents
+    .replace(/[^A-Z0-9]/g, ""); // Keep only letters and numbers
 
-  // Lookup in countries list 
+  // Lookup in countries list
   const code = normalized in countriesList ? countriesList[normalized] : null;
 
-  return { 
-    country: code ? normalized : null, 
-    code 
+  return {
+    country: code ? normalized : null,
+    code,
   };
 };
 
-module.exports = { getCountryCode };
+const checkIfCountryCodeExists = (countryCode) => {
+  if (!countryCode || typeof countryCode !== "number") {
+    return false;
+  }
+
+  return Object.values(countriesList).includes(countryCode);
+};
+
+module.exports = { getCountryCode, checkIfCountryCodeExists };

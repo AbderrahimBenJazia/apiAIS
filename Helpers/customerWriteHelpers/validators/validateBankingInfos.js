@@ -1,7 +1,14 @@
 "use strict";
 
-const { nameFormat } = require("../nameFormat");
+const { nameFormat } = require("../formatters/nameFormat");
 const { validateField } = require('./validateFieldUtils');
+
+const BANKING_PATTERNS = {
+  bic: /^[A-Z]{6}[0-9A-Z]{2}([0-9A-Z]{3})?$/,
+  iban: /^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/,
+};
+
+const TITULAIRE_MAX_LENGTH = 99;
 
 const validateBankingItem = (value, fieldName, regex) => {
   // Use shared field validation
@@ -26,20 +33,12 @@ const validateBankingInfos = (body) => {
   const values = {};
 
   // BIC validation using helper
-  const bicResult = validateBankingItem(
-    body.bic,
-    "bic",
-    /^[A-Z]{6}[0-9A-Z]{2}([0-9A-Z]{3})?$/
-  );
+  const bicResult = validateBankingItem(body.bic, "bic", BANKING_PATTERNS.bic);
   if (!bicResult.isValid) return bicResult;
   values.bic = bicResult.value;
 
   // IBAN validation using helper
-  const ibanResult = validateBankingItem(
-    body.iban,
-    "iban",
-    /^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/
-  );
+  const ibanResult = validateBankingItem(body.iban, "iban", BANKING_PATTERNS.iban);
   if (!ibanResult.isValid) return ibanResult;
   values.iban = ibanResult.value;
 
@@ -61,8 +60,8 @@ const validateBankingInfos = (body) => {
   }
 
   // Truncate if too long (banking systems typically limit to 99 chars)
-  if (titulaire.length > 99) {
-    titulaire = titulaire.slice(0, 99);
+  if (titulaire.length > TITULAIRE_MAX_LENGTH) {
+    titulaire = titulaire.slice(0, TITULAIRE_MAX_LENGTH);
   }
 
   // Normalize the account holder name
@@ -70,7 +69,5 @@ const validateBankingInfos = (body) => {
 
   return { isValid: true, values };
 };
-
-
 
 module.exports = { validateBankingInfos };

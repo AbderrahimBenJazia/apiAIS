@@ -30,7 +30,7 @@ async function createToken(event) {
     const validation = validateAuthKeys(keyPublic, keyPrivate);
 
     if (!validation.valid) {
-      tokenLogger(ip, headers, "failedtoken", {
+      await tokenLogger(ip, headers, "failedtoken", {
         keyPublic,
         keyPrivate,
         error: validation?.error?.message,
@@ -58,7 +58,7 @@ async function createToken(event) {
     const isValidCredentials = secureCompare(keyPrivate, api?.keyPrivate);
 
     if (!isValidCredentials) {
-      tokenLogger(ip, headers, "failedtoken", {
+      await tokenLogger(ip, headers, "failedtoken", {
         keyPublic,
         keyPrivate,
         error: "Invalid private key",
@@ -92,12 +92,12 @@ async function createToken(event) {
         );
     }
 
-    tokenLogger(ip, headers, "token", { professional });
+    await tokenLogger(ip, headers, "token", { professional });
 
     return createApiResponse(true, token, MESSAGES.SUCCESSFUL_AUTHENTICATION);
   } catch (e) {
     // For debugging purposes, log more details in the bugs collection
-    tokenLogger(ip, headers, "bugs", {
+    await tokenLogger(ip, headers, "bugs", {
       keyPublic,
       keyPrivate,
       error: e.message || e,

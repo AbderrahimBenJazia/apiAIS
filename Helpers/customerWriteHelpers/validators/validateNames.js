@@ -1,6 +1,6 @@
 "use strict";
 
-const { nameFormat } = require("../nameFormat");
+const { nameFormat } = require("../formatters/nameFormat");
 const { validateField } = require('./validateFieldUtils');
 
 const validateNameField = (value, fieldName, isRequired = true) => {

@@ -1,6 +1,6 @@
 "use strict";
 
-const { connectToDatabase } = require("../Database/mongoConnexion");
+const { connectToDatabase } = require("../../Database/mongoConnexion");
 
 const processCommuneName = (communeName, keepIslands) => {
   let cleanCommune = communeName.trim();

@@ -4,7 +4,7 @@ const validateField = (value, fieldName, allowNumber = true) => {
   if (!value) {
     return {
       isValid: false,
-      errorMessage: `[${fieldName}] n'est pas défini`,
+      errorMessage: `[${fieldName}] n'est pas défini(e)`,
     };
   }
 

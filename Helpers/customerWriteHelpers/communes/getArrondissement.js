@@ -503,6 +503,30 @@ const POSTAL_CODE_MAP = new Map([
   ],
 ]);
 
+const COMMUNES_COG = {
+  MARSEILLE: {
+    COG: "13055",
+    departement: "13",
+    codeCommune: "055",
+    nom: "MARSEILLE",
+    changementDpt: "0",
+  },
+  LYON: {
+    COG: "69123",
+    departement: "69",
+    codeCommune: "123",
+    nom: "LYON",
+    changementDpt: "0",
+  },
+  PARIS: {
+    COG: "75056",
+    departement: "75",
+    codeCommune: "056",
+    nom: "PARIS",
+    changementDpt: "0",
+  },
+};
+
 // City name to department mapping (for bulk searches)
 const CITY_DEPARTMENTS = {
   PARIS: "75",
@@ -541,7 +565,15 @@ const getArrondissement = (query) => {
     if (!isNaN(numericQuery) && numericQuery > 0) {
       const result = POSTAL_CODE_MAP.get(numericQuery);
       if (result) {
-        return [{ ...result, source: "arrondissement" }];
+        const arrondResult = [{ ...result, source: "arrondissement" }];
+        
+        // Add main commune info
+        const cityName = result.nom.split(" ")[0]; // Extract "PARIS" from "PARIS 01"
+        if (COMMUNES_COG[cityName]) {
+          arrondResult.push({ ...COMMUNES_COG[cityName], source: "arrondissement" });
+        }
+        
+        return arrondResult;
       }
       return [];
     }
@@ -553,11 +585,19 @@ const getArrondissement = (query) => {
     // Check for exact arrondissement match first
     for (const [postalCode, arrond] of POSTAL_CODE_MAP) {
       if (arrond.nomSearch.toUpperCase() === normalizedQuery) {
-        return [{ ...arrond, source: "arrondissement" }];
+        const arrondResult = [{ ...arrond, source: "arrondissement" }];
+        
+        // Add main commune info
+        const cityName = arrond.nom.split(" ")[0]; // Extract "PARIS" from "PARIS 01"
+        if (COMMUNES_COG[cityName]) {
+          arrondResult.push({ ...COMMUNES_COG[cityName], source: "arrondissement" });
+        }
+        
+        return arrondResult;
       }
     }
 
-    // Check for city name match (return all arrondissements)
+    // Check for city name match (return all arrondissements + main commune)
     for (const [cityName, department] of Object.entries(CITY_DEPARTMENTS)) {
       if (
         normalizedQuery === cityName ||
@@ -572,7 +612,14 @@ const getArrondissement = (query) => {
         }
 
         // Sort by postal code for consistent ordering
-        return cityArrondissements.sort((a, b) => a.codePostal - b.codePostal);
+        cityArrondissements.sort((a, b) => a.codePostal - b.codePostal);
+        
+        // Add main commune info at the end
+        if (COMMUNES_COG[cityName]) {
+          cityArrondissements.push({ ...COMMUNES_COG[cityName], source: "arrondissement" });
+        }
+        
+        return cityArrondissements;
       }
     }
 

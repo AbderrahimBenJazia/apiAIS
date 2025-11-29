@@ -1,6 +1,6 @@
 "use strict";
 
-const { validateField } = require('./validateFieldUtils');
+const { validateField } = require("./validateFieldUtils");
 
 // Constants for civilité validation
 const CIVILITE = {
@@ -23,7 +23,8 @@ CIVILITE.MADAME.variants.forEach((variant) =>
   CIVILITE_LOOKUP.set(variant, "2")
 );
 
-const validateCivilite = (civilite) => {
+const validateCivilite = (body) => {
+  const civilite = body.civilite;
   // Use shared field validation
   const fieldValidation = validateField(civilite, "civilite", true);
   if (!fieldValidation.isValid) return fieldValidation;
@@ -33,7 +34,7 @@ const validateCivilite = (civilite) => {
   const result = CIVILITE_LOOKUP.get(normalized);
 
   if (result) {
-    return { isValid: true, value: result };
+    return { isValid: true, values: { civilite: result } };
   }
 
   return {

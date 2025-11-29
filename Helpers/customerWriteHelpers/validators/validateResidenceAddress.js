@@ -1,11 +1,11 @@
 "use strict";
 
-const { nameFormat } = require("../nameFormat");
+const { nameFormat } = require("../formatters/nameFormat");
 const {
   communeSearchGeoApiByNameAndPostalCode,
-} = require("../communeSearchGeoApi");
-const { communeSearchInsee } = require("../communeSearchInsee");
-const { getArrondissement } = require("../getArrondissement");
+} = require("../communes/communeSearchGeoApi");
+const { communeSearchInsee } = require("../communes/communeSearchInsee");
+const { getArrondissement } = require("../communes/getArrondissement");
 const { validateCountryCode } = require("./validateCountryCode");
 const { validateField } = require("./validateFieldUtils");
 
@@ -57,7 +57,7 @@ const validateInputs = (body) => {
   const countryResult = validateCountryCode(
     body.codePays,
     "codePays (adresse de résidence)"
-  ); // !! La recherche du code pays ici n'a pas trop  de sens, les adresses doivent être nécessairement en Frnace (laissé pour backward compatibility avec l'API initiale mais donner un code autre que la france va engendrer une erreur API Urssaf lors de l'inscription)
+  ); // !! La recherche du code pays ici n'a pas trop  de sens, les adresses doivent être nécessairement en France (laissé pour backward compatibility avec l'API initiale mais donner un code autre que la france va engendrer une erreur API Urssaf lors de l'inscription)
   if (!countryResult.isValid) return countryResult;
   validatedValues.codePays = countryResult.value;
 
@@ -144,7 +144,7 @@ const validateResidenceAddress = async (body) => {
     };
   }
 
-  values.COG = residenceCommuneInfos.COG;
+  values.codeCommuneResidence = residenceCommuneInfos.COG;
   values.libelleCommune = residenceCommuneInfos.nom;
 
   return { isValid: true, values };
