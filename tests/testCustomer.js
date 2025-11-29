@@ -5,7 +5,7 @@ const url =
 
 const main = async () => {
   const headers = {
-    token: "AIS_j57dc-KhLLy-oTolx-o8GgH-SIDWp-f8XPN-RsKSy-IvIS9-aNsw5-U5hRs",
+    token: "AIS_D64etCOPqgdSJRhOEg8cCFSHMmzlmBLXbitf5p7WHl65bzFAPW",
   };
 
   const body = {
@@ -19,7 +19,7 @@ const main = async () => {
     codePostal: "75001",
     dateNaissance: "01-12-2022",
     codePaysNaissance: 99100,
-    libelleCommuneNaissance: "Paris",
+    libelleCommuneNaissance: "Paris 15",
     bic: "AGRIFRPPXXX",
     iban: "FR7630006000011234567890189",
     titulaire: "John Doe",
@@ -29,7 +29,7 @@ const main = async () => {
   try {
     const response = await axios.post(url, body, { headers });
 
-    response?.data?.data.forEach((item) => console.log(item));
+    console.log(response.data);
   } catch (error) {
     console.log(
       "Error details:",

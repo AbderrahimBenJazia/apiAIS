@@ -1,7 +1,7 @@
 "use strict";
 
 const axios = require("axios");
-const { getUrssafUrl } = require("./getUrssafUrl");
+const { getUrssafUrlToken } = require("./getUrssafUrl");
 
 const CONFIG = {
   SCOPE: "homeplus.tiersprestations",
@@ -20,7 +20,9 @@ const getUrssafToken = async (keyPublic, keyPrivate, isTest = false) => {
       };
     }
 
-    const url = getUrssafUrl(isTest);
+    const url = getUrssafUrlToken(isTest);
+
+  
 
     const body = new URLSearchParams({
       scope: CONFIG.SCOPE,

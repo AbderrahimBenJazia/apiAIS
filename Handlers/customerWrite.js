@@ -9,6 +9,9 @@ const { parseRequestBody } = require("../Helpers/General/parseRequestBody");
 const {
   prepareUrssafData,
 } = require("../Helpers/customerWriteHelpers/prepareUrssafData");
+
+const { createClientUrssaf } = require("../Helpers/Urssaf/createClientUrssaf");
+
 async function customerWrite(event) {
   let context = {};
   const { headers, ip } = extractRequestContext(event);
@@ -40,37 +43,54 @@ async function customerWrite(event) {
 
   const urssafData = prepareUrssafData(checkBodyResult.data);
 
-  return createApiResponse(true, urssafData, "URSSAF TOKEN RETRIEVED");
+  const nTrials = urssafData.length;
+  let response = null;
+
+  for (let i = 0; i < nTrials; i++) {
+    console.log("trial ", i + 1, " / ", nTrials);
+    response = await createClientUrssaf(
+      tokenResponse.token,
+      urssafData[i],
+      isTest
+    );
+
+    // If client creation succeeds, break out of loop
+    if (response.success) {
+      break;
+    }
+  }
+
+  return createApiResponse(true, response, "CLIENT CREATION COMPLETED");
 }
 
 /* const main = async () => {
   const body = {
     civilite: "M",
-    nomNaissance: "{Doe}",
-    prenoms: "John",
-    numeroTelephonePortable: "0612345678",
-    adresseMail: "john.doe@example.com",
-    libelleVoie: "10 rue de la paix",
-    libelleCommuneResidence: "Paris ",
-    codePostal: "75001",
-    dateNaissance: "01-12-2022",
+    nomNaissance: "Espalivet",
+    prenoms: "Kevin",
+    numeroTelephonePortable: "0633055199",
+    adresseMail: "kevin.espalivet@hotmail.com",
+    libelleVoie: "31 rue du troupeau",
+    libelleCommuneResidence: "Argenteuil",
+    codePostal: "95100",
+    dateNaissance: "09-10-1994",
     codePaysNaissance: 99100,
-    libelleCommuneNaissance: "Saint Denis",
+    libelleCommuneNaissance: "Rodez",
     bic: "AGRIFRPPXXX",
-    iban: "FR7630006000011234567890189",
-    titulaire: "John Doe",
+    iban: "FR76300060000112345678901",
+    titulaire: "Mr Kévin Espalivet",
   };
 
   const event = {
     headers: {
-      token: "AIS_4lhk8-IGSnZ-xI3dj-qNrDO-iBQ7J-eIBoD-LBj42-nOgbN-y2B2u-dw",
+      token: "AIS_D64etCOPqgdSJRhOEg8cCFSHMmzlmBLXbitf5p7WHl65bzFAPW",
     },
     body: JSON.stringify(body),
   };
   const response = await customerWrite(event);
 
-  console.log(response);
+    console.log(response);
 };
-main(); */
-
+main();
+ */
 module.exports = { customerWrite };
