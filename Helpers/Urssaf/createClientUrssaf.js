@@ -3,7 +3,7 @@
 const axios = require("axios");
 const { getUrssafUrl } = require("./getUrssafUrl");
 const { getClientStatusUrssaf } = require("./getClientStatusUrssaf");
-
+const { handleUrssafErrors } = require("./handleUrssafErrors");
 const defaultResponse = {
   success: false,
   urssafKeyCustomer: undefined,
@@ -40,6 +40,10 @@ const manageCreationRequest = async (urlUrssaf, clientInfos, headers) => {
       responseInfos.errorCode = "INCONNUE";
       responseInfos.errorDescription = error?.message || "Unknown error";
     }
+  }
+
+  if (responseInfos.errorMessage) {
+    responseInfos.errorMessage = handleUrssafErrors(responseInfos);
   }
 
   return responseInfos;

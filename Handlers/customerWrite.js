@@ -63,17 +63,17 @@ async function customerWrite(event) {
   return createApiResponse(true, response, "CLIENT CREATION COMPLETED");
 }
 
-/* const main = async () => {
+const main = async () => {
   const body = {
     civilite: "M",
     nomNaissance: "Espalivet",
     prenoms: "Kevin",
     numeroTelephonePortable: "0633055199",
-    adresseMail: "kevin.espalivet@hotmail.com",
+    adresseMail: "kevin.espalivet@hotmail.fr",
     libelleVoie: "31 rue du troupeau",
     libelleCommuneResidence: "Argenteuil",
     codePostal: "95100",
-    dateNaissance: "09-10-1994",
+    dateNaissance: "09-10-1991",
     codePaysNaissance: 99100,
     libelleCommuneNaissance: "Rodez",
     bic: "AGRIFRPPXXX",
@@ -83,7 +83,7 @@ async function customerWrite(event) {
 
   const event = {
     headers: {
-      token: "AIS_D64etCOPqgdSJRhOEg8cCFSHMmzlmBLXbitf5p7WHl65bzFAPW",
+      token: "AIS_d0AVg-27vhn-jzWOl-0dFLU-8TE7B-LT7D7-ttjQH-L6rxU-9ZVBV-ba0Mk",
     },
     body: JSON.stringify(body),
   };
@@ -92,5 +92,5 @@ async function customerWrite(event) {
     console.log(response);
 };
 main();
- */
+
 module.exports = { customerWrite };

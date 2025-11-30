@@ -5,7 +5,7 @@ const url =
 
 const main = async () => {
   const headers = {
-    token: "AIS_D64etCOPqgdSJRhOEg8cCFSHMmzlmBLXbitf5p7WHl65bzFAPW",
+    token: "AIS_d0AVg-27vhn-jzWOl-0dFLU-8TE7B-LT7D7-ttjQH-L6rxU-9ZVBV-ba0Mk",
   };
 
   const body = {
