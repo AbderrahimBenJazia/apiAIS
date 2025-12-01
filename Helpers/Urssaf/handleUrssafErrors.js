@@ -1,5 +1,6 @@
 "use strict";
-const MESSAGES = require("../Responses/messages");
+const { MESSAGES }= require("../Responses/messages");
+
 
 const errorsDescription = {
   DENIED_URSSAF: MESSAGES.URSSAF_ACCESS_DENIED,

@@ -120,7 +120,7 @@ const validateResidenceAddress = async (body) => {
     return {
       isValid: false,
       errorMessage:
-        "[codePostal (adresse de résidence)] doit être composé de 5 chiffres",
+        "[check] [codePostal (adresse de résidence)] doit être composé de 5 chiffres",
     };
   }
   values.codePostal = cleanPostalCode;
@@ -140,7 +140,7 @@ const validateResidenceAddress = async (body) => {
     return {
       isValid: false,
       errorMessage:
-        "[libelleCommune ou libelleCommuneResidence] Veuillez vérifier la ville de résidence, le code postal, et/ou indiquer l'arrondissement (par exemple Lyon 09)",
+        "[check] [libelleCommune ou libelleCommuneResidence] Veuillez vérifier la ville de résidence, le code postal, et/ou indiquer l'arrondissement (par exemple Lyon 09)",
     };
   }
 

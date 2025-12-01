@@ -4,9 +4,15 @@ const { validateCivilite } = require("./validators/validateCivilite");
 const { validateNames } = require("./validators/validateNames");
 const { validateContact } = require("./validators/validateContact");
 const { validateBankingInfos } = require("./validators/validateBankingInfos");
-const { validateResidenceAddress } = require("./validators/validateResidenceAddress");
-const { validateBirthInformation } = require("./validators/validateBirthInformation");
-const { validateOptionalFields } = require("./validators/validateOptionalFields");
+const {
+  validateResidenceAddress,
+} = require("./validators/validateResidenceAddress");
+const {
+  validateBirthInformation,
+} = require("./validators/validateBirthInformation");
+const {
+  validateOptionalFields,
+} = require("./validators/validateOptionalFields");
 
 const ALLOWED_FIELDS = [
   "civilite",
@@ -27,11 +33,12 @@ const ALLOWED_FIELDS = [
   "codePaysNaissance",
   "libelleCommuneNaissance",
   "cleExterneClient",
+  "info",
 ];
 
 const extractFields = (body) => {
   const cleanBody = Object.create(null);
-  
+
   for (const field of ALLOWED_FIELDS) {
     if (body.hasOwnProperty(field)) {
       cleanBody[field] = body[field];
@@ -92,14 +99,11 @@ const checkBody = async (body) => {
 
     return { isValid: true, data: validatedData };
   } catch (error) {
-
-  
     return {
       isValid: false,
       errorMessage: `[checkBody] erreur interne lors de la validation}`,
     };
   }
 };
-
 
 module.exports = { checkBody };

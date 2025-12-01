@@ -26,6 +26,10 @@ const {
   checkIsUnique,
 } = require("../Helpers/customerWriteHelpers/checkIsUnique");
 
+const {
+  countriesList,
+} = require("../Helpers/customerWriteHelpers/communes/getCountryCode");
+
 /**
  * Helper to log activity and return API response
  **/
@@ -34,10 +38,11 @@ const logAndRespond = async (
   context,
   logData,
   userMessage,
-  success = false
+  success = false,
+  data = null
 ) => {
   await logActivity(context, "customerWrite", logData);
-  return createApiResponse(success, null, userMessage);
+  return createApiResponse(success, data, userMessage);
 };
 
 /**
@@ -60,22 +65,18 @@ async function customerWrite(event) {
 
     const { keyPublic, keyPrivate } = authResponse.userData?.urssaf;
 
-    const isTest = authResponse.userData?.abonnement?.licence === "test";
-    const tokenResponse = await getUrssafToken(keyPublic, keyPrivate, isTest);
-
-    if (!tokenResponse.boolean) {
-      return await logAndRespond(
-        context,
-        {
-          error: "Urssaf token retrieval failed",
-          type: "tokenError",
-          userMessage: MESSAGES.URSSAF_ACCESS_DENIED,
-        },
-        MESSAGES.URSSAF_ACCESS_DENIED
-      );
-    }
-
     const { body } = parseRequestBody(event, context, "customerWrite");
+
+    const info = body.info;
+
+    if (["pays", "true", true].includes(info)) {
+      await logActivity(context, "customerWrite", {
+        error: null,
+        type: "infoPays",
+      });
+
+      return countriesList;
+    }
 
     // Create cleared body for logging (remove sensitive banking info)
     clearedBody = { ...body };
@@ -116,6 +117,21 @@ async function customerWrite(event) {
           userMessage: isUniqueResult.errorMessage,
         },
         isUniqueResult.errorMessage
+      );
+    }
+
+    const isTest = authResponse.userData?.abonnement?.licence === "test";
+    const tokenResponse = await getUrssafToken(keyPublic, keyPrivate, isTest);
+
+    if (!tokenResponse.boolean) {
+      return await logAndRespond(
+        context,
+        {
+          error: "Urssaf token retrieval failed",
+          type: "tokenError",
+          userMessage: MESSAGES.URSSAF_ACCESS_DENIED,
+        },
+        MESSAGES.URSSAF_ACCESS_DENIED
       );
     }
 

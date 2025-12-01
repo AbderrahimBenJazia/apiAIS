@@ -427,4 +427,4 @@ const checkIfCountryCodeExists = (countryCode) => {
   return Object.values(countriesList).includes(countryCode);
 };
 
-module.exports = { getCountryCode, checkIfCountryCodeExists };
+module.exports = { getCountryCode, checkIfCountryCodeExists,countriesList };

@@ -17,7 +17,7 @@ const validateCountryCode = (codePays, fieldName,defaultValue = 99100) => {
     if (numericCode.toString().length !== 5) {
       return {
         isValid: false,
-        errorMessage: `[${fieldName}] doit contenir 5 chiffres (e.g 99100)`,
+        errorMessage: `[check] [${fieldName}] doit contenir 5 chiffres (e.g 99100)`,
       };
     }
   }
@@ -28,7 +28,7 @@ const validateCountryCode = (codePays, fieldName,defaultValue = 99100) => {
   if (!isCountryCodeValid) {
     return {
       isValid: false,
-      errorMessage: `[${fieldName}] n'a pas pu être trouvé. Veuillez vérifier le code founrni`,
+      errorMessage: `[check] [${fieldName}] n'a pas pu être trouvé. Veuillez vérifier le code fourni`,
     };
   }
 

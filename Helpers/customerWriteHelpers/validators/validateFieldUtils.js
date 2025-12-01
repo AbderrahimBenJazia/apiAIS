@@ -4,7 +4,7 @@ const validateField = (value, fieldName, allowNumber = true) => {
   if (!value) {
     return {
       isValid: false,
-      errorMessage: `[${fieldName}] n'est pas défini(e)`,
+      errorMessage: `[check] [${fieldName}] n'est pas défini(e)`,
     };
   }
 
@@ -16,7 +16,7 @@ const validateField = (value, fieldName, allowNumber = true) => {
       : "une chaîne de caractères";
     return {
       isValid: false,
-      errorMessage: `[${fieldName}] doit être ${expectedType}`,
+      errorMessage: `[check] [${fieldName}] doit être ${expectedType}`,
     };
   }
 

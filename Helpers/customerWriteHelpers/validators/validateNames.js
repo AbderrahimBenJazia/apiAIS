@@ -9,7 +9,7 @@ const validateNameField = (value, fieldName, isRequired = true) => {
     if (isRequired) {
       return {
         isValid: false,
-        errorMessage: `[${fieldName}] n'est pas défini`,
+        errorMessage: `[check] [${fieldName}] n'est pas défini`,
       };
     }
     return { isValid: true, value: null }; // Optional field, no value
@@ -26,7 +26,7 @@ const validateNameField = (value, fieldName, isRequired = true) => {
   if (!normalizedName || normalizedName.trim().length === 0) {
     return {
       isValid: false,
-      errorMessage: `[${fieldName}] ne contient aucun caractère valide pour un nom`,
+      errorMessage: `[check] [${fieldName}] ne contient aucun caractère valide pour un nom`,
     };
   }
 

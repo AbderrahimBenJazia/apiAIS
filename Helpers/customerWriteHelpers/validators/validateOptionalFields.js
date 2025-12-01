@@ -23,7 +23,7 @@ const validateOptionalFields = (body) => {
     if (normalized.length > EXTERNAL_KEY_MAX_LENGTH) {
       return {
         isValid: false,
-        errorMessage: `[cleExterneClient] trop longue (max ${EXTERNAL_KEY_MAX_LENGTH} caractères)`,
+        errorMessage: `[check] [cleExterneClient] trop longue (max ${EXTERNAL_KEY_MAX_LENGTH} caractères)`,
       };
     }
 
@@ -31,7 +31,7 @@ const validateOptionalFields = (body) => {
     if (!EXTERNAL_KEY_PATTERN.test(normalized)) {
       return {
         isValid: false,
-        errorMessage: "[cleExterneClient] format invalide. Seuls les caractères alphanumériques, tirets et underscores sont acceptés",
+        errorMessage: "[check] [cleExterneClient] format invalide. Seuls les caractères alphanumériques, tirets et underscores sont acceptés",
       };
     }
 

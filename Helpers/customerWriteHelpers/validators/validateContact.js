@@ -28,7 +28,7 @@ const validatePhone = (phone) => {
     return {
       isValid: false,
       errorMessage:
-        "[numeroTelephonePortable] format invalide. Formats acceptés: 0612345678, +33612345678",
+        "[check] [numeroTelephonePortable] format invalide. Formats acceptés: 0612345678, +33612345678",
     };
   }
 
@@ -51,7 +51,7 @@ const validateEmail = (email) => {
   if (normalized.length > CONTACT_LIMITS.emailMaxLength) {
     return {
       isValid: false,
-      errorMessage: `[adresseMail] trop longue (max ${CONTACT_LIMITS.emailMaxLength} caractères)`,
+      errorMessage: `[check] [adresseMail] trop longue (max ${CONTACT_LIMITS.emailMaxLength} caractères)`,
     };
   }
 
@@ -59,7 +59,7 @@ const validateEmail = (email) => {
   if (!CONTACT_PATTERNS.email.test(normalized)) {
     return {
       isValid: false,
-      errorMessage: "[adresseMail] format invalide. Exemple: nom@domaine.com",
+      errorMessage: "[check] [adresseMail] format invalide. Exemple: nom@domaine.com",
     };
   }
 
