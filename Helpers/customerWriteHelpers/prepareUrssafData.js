@@ -39,6 +39,12 @@ const prepareUrssafData = (data) => {
 
  
 
+  // Extract commune code from COG if needed
+  const departement = codeCommuneResidence?.slice(0, 2);
+  const communeCode = codeCommuneResidence?.length === 5
+    ? getCodeCommuneFromCog(codeCommuneResidence, departement)
+    : codeCommuneResidence;
+
   const infos = {
     civilite,
     nomNaissance,
@@ -52,7 +58,7 @@ const prepareUrssafData = (data) => {
       complement,
       codePays,
       libelleCommune,
-      codeCommune: codeCommuneResidence,
+      codeCommune: communeCode,
     },
     coordonneeBancaire: {
       bic,

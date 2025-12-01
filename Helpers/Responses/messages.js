@@ -16,7 +16,11 @@ const MESSAGES = {
   INTERNAL_ERROR: "Erreur interne du serveur",
   UNAUTHORIZED_ACCESS: "Accès non autorisé",
   TOKEN_EXPIRED: "Le token utilisé est invalide.",
-  INVALID_BODY :"Invalid JSON in request body"
+  INVALID_BODY :"Invalid JSON in request body",
+  // URSSAF errors
+  URSSAF_ACCESS_DENIED: "L'accès à l'API Tiers de prestation est refusé, veuillez réessayer ultèrieurement",
+  // Success messages
+  CUSTOMER_CREATED_SUCCESS: "Particulier inscrit à l'Avance Immédiate avec succès."
 };
 
 module.exports = {

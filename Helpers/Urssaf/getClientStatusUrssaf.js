@@ -20,8 +20,13 @@ const getClientStatusUrssaf = async (urssafToken, idClient, isTest) => {
 
     const status = handleUrssafStatus(response.data.statut);
     return { success: true, status, idClient };
-  } catch {
-    return { success: false, status: undefined, idClient };
+  } catch (error) {
+    return {
+      success: false,
+      status: undefined,
+      idClient,
+      error: error.message || error,
+    };
   }
 };
 

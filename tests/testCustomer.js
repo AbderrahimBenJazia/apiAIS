@@ -3,9 +3,10 @@ const axios = require("axios");
 const url =
   "https://zyi0sssm11.execute-api.eu-west-3.amazonaws.com/customerWrite";
 
+
 const main = async () => {
   const headers = {
-    token: "AIS_d0AVg-27vhn-jzWOl-0dFLU-8TE7B-LT7D7-ttjQH-L6rxU-9ZVBV-ba0Mk",
+    token: "AIS_17Awq-6qAOs-iYcd8-qZdHr-WKg2i-ZYGS1-nFxrb-empb4-mKaLN-d4wY",
   };
 
   const body = {
@@ -13,7 +14,7 @@ const main = async () => {
     nomNaissance: "{Doe}",
     prenoms: "John",
     numeroTelephonePortable: "0612345678",
-    adresseMail: "john.doe@example.com",
+    adresseMail: "isTEst@yopmail.com",
     libelleVoie: "10 rue de la paix",
     libelleCommuneResidence: "Paris 1",
     codePostal: "75001",

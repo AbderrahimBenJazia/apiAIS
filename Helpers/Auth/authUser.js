@@ -4,7 +4,6 @@ const { connectToDatabase } = require("../Database/mongoConnexion");
 const createApiResponse = require("../Responses/apiResponse");
 const { MESSAGES } = require("../Responses/messages");
 const { getHeaderValue } = require("../General/normalizeHeaders");
-const { normalizeHeaders } = require("../General/normalizeHeaders");
 const userProjections = {
   _id: 1,
   "api.token": 1,
@@ -15,6 +14,9 @@ const userProjections = {
   abonnement: 1,
   urssaf: 1,
 };
+
+const TOKEN_EXPIRATION_TIME = 60 * 60 * 1000; // 1 hour
+
 
 const authUser = async (headers) => {
   
@@ -43,7 +45,7 @@ const authUser = async (headers) => {
     return infos;
   }
 
-  const isTokenExpired = new Date() - user.api.tokenDate > 60 * 60 * 1000;
+  const isTokenExpired = new Date() - user.api.tokenDate > TOKEN_EXPIRATION_TIME;
 
   if (isTokenExpired) {
     return {
