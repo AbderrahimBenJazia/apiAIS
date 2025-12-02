@@ -1,6 +1,6 @@
 "use strict";
 
-const { nameFormat } = require("../formatters/nameFormat");
+const { nameFormat } = require("../../formatters/nameFormat");
 const {
   communeSearchGeoApiByNameAndPostalCode,
 } = require("../communes/communeSearchGeoApi");

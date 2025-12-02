@@ -19,6 +19,7 @@ const MESSAGES = {
   INVALID_BODY :"Invalid JSON in request body",
   // URSSAF errors
   URSSAF_ACCESS_DENIED: "L'accès à l'API Tiers de prestation est refusé, veuillez réessayer ultèrieurement",
+  URSSAF_SERVICE_NOT_AVAILABLE:"Le service de l'URSSAF connaît une indisponibilité, veuillez réessayer ultérieurement.",
   // Success messages
   CUSTOMER_CREATED_SUCCESS: "Particulier inscrit à l'Avance Immédiate avec succès."
 };

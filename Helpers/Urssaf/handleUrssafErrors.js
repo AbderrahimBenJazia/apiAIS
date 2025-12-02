@@ -5,6 +5,7 @@ const { MESSAGES }= require("../Responses/messages");
 const errorsDescription = {
   DENIED_URSSAF: MESSAGES.URSSAF_ACCESS_DENIED,
   INCONNUE: MESSAGES.INTERNAL_ERROR,
+  NOT_AVAILABLE_URSSAF:MESSAGES.URSSAF_SERVICE_NOT_AVAILABLE,
   MAINTENANCE:
     "Le serveur de l'URSSAF est sous maintenance, veuillez réessayer ultérieurement",
   ERR_CONTACT:

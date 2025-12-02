@@ -1,7 +1,7 @@
 "use strict";
 
-const { nameFormat } = require("../formatters/nameFormat");
-const { dateFormatUrssaf } = require("../formatters/dateFormatUrssaf");
+const { nameFormat } = require("../../formatters/nameFormat");
+const { dateFormatUrssaf } = require("../../formatters/dateFormatUrssaf");
 const { communeSearchInsee } = require("../communes/communeSearchInsee");
 const { getArrondissement } = require("../communes/getArrondissement");
 const { validateCountryCode } = require("./validateCountryCode");

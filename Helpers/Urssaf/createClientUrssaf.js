@@ -19,10 +19,14 @@ const manageCreationRequest = async (urlUrssaf, clientInfos, headers) => {
   try {
     const response = await axios.post(urlUrssaf, clientInfos, { headers });
 
-    if (response.status === 200) {
+    // Success: Extract client ID from any 2xx response
+    if (response.status >= 200 && response.status < 300) {
       responseInfos.urssafKeyCustomer = response.data?.idClient;
-    } else if ([500, 503].includes(response.status)) {
-      responseInfos.errorCode = "MAINTENANCE";
+      
+      if (!responseInfos.urssafKeyCustomer) {
+        responseInfos.errorCode = "MISSING_ID_CLIENT";
+        responseInfos.errorDescription = "URSSAF did not return idClient";
+      }
     }
   } catch (error) {
     const status = error?.response?.status;
@@ -31,9 +35,11 @@ const manageCreationRequest = async (urlUrssaf, clientInfos, headers) => {
       responseInfos.errorCode = "DENIED_URSSAF";
     } else if ([500, 503].includes(status)) {
       responseInfos.errorCode = "MAINTENANCE";
+    } else if (status === 403) {
+      responseInfos.errorCode = "NOT_AVAILABLE_URSSAF";
     } else if (status === 400) {
       const errorData = error.response?.data?.[0] || {};
-      responseInfos.errorCode = errorData.code;
+      responseInfos.errorCode = errorData.code || "BAD_REQUEST";
       responseInfos.errorMessage = errorData.message;
       responseInfos.errorDescription = errorData.description;
     } else {
@@ -84,7 +90,9 @@ const createClientUrssaf = async (urssafToken, clientInfos, isTest) => {
       if (statusResult.success) {
         response.success = true;
       } else {
-        response.errorCode = "NON_INSCRIPTION";
+        // Status check failed - override creation success
+        response.errorCode = statusResult.errorCode || "NON_INSCRIPTION";
+        response.errorMessage = statusResult.errorMessage;
       }
     }
   } catch (error) {

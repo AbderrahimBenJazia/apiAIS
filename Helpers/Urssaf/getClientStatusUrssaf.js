@@ -13,21 +13,49 @@ const getClientStatusUrssaf = async (urssafToken, idClient, isTest) => {
     Authorization: "Bearer " + urssafToken,
   };
 
-  try {
-    const response = await axios.get(url, {
-      headers,
-    });
+  const responseInfos = {
+    success: false,
+    status: undefined,
+    idClient,
+    error: null,
+    errorCode: undefined,
+    errorMessage: undefined,
+  };
 
-    const status = handleUrssafStatus(response.data.statut);
-    return { success: true, status, idClient };
+  try {
+    const response = await axios.get(url, { headers });
+
+    // Success: 2xx status codes
+    const statusClient = handleUrssafStatus(response.data.statut);
+    responseInfos.success = true;
+    responseInfos.status = statusClient;
+    
   } catch (error) {
-    return {
-      success: false,
-      status: undefined,
-      idClient,
-      error: error.message || error,
-    };
+
+    console.log(error.response.status)
+    const status = 403;
+
+    // Handle different HTTP error status codes
+    if (status === 401) {
+      responseInfos.errorCode = "DENIED_URSSAF";
+    } else if ([500, 503].includes(status)) {
+      responseInfos.errorCode = "MAINTENANCE";
+    } else if (status === 403) {
+      responseInfos.errorCode = "NOT_AVAILABLE_URSSAF";
+    } else if (status === 400) {
+      const errorData = error.response?.data?.[0] || {};
+      responseInfos.errorCode = errorData.code || "BAD_REQUEST";
+      responseInfos.errorMessage = errorData.message;
+    } else {
+      // Network error or other issues
+      responseInfos.errorCode = "INCONNUE";
+      responseInfos.errorMessage = error?.message || "Unknown error";
+    }
+    
+    responseInfos.error = error.message || error;
   }
+
+  return responseInfos;
 };
 
 const handleUrssafStatus = (status) => {
