@@ -1,7 +1,7 @@
 "use strict";
 
-const { dateFormatMongo } = require("./formatters/dateFormatMongo");
-const { titleCase } = require("./formatters/titleCase");
+const { dateFormatMongo } = require("../formatters/dateFormatMongo");
+const { titleCase } = require("../formatters/titleCase");
 
 const prepareDbData = (urssafData, userData) => {
   const {
