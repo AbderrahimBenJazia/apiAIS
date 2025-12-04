@@ -68,7 +68,7 @@ const searchCustomer = async (collection, professional, mode, value) => {
   };
 };
 
-const customerCheck = async (professional, body) => {
+const checkCustomer = async (professional, body) => {
   const client = await connectToDatabase();
   const db = client.db("providerDB");
   const customerCollection = db.collection("customer");
@@ -115,4 +115,4 @@ const customerCheck = async (professional, body) => {
   return result;
 };
 
-module.exports = { customerCheck };
+module.exports = { checkCustomer};

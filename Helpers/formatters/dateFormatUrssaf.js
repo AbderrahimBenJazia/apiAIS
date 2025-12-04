@@ -2,10 +2,19 @@
 
 const dateFormatUrssaf = (date) => {
   try {
+    // Handle Date objects by converting to ISO string first
+    let dateString = date;
+    if (date instanceof Date) {
+      if (isNaN(date.getTime())) {
+        return null; // Invalid Date object
+      }
+      dateString = date.toISOString();
+    }
+
     // Convert to string and take first 10 characters, remove spaces
     // "2023-01-01T02:00:00Z" → "2023-01-01"
     // " 01/01/2023 " → "01/01/2023"
-    let processed = date.toString().slice(0, 10).replace(/ /g, "");
+    let processed = dateString.toString().slice(0, 10).replace(/ /g, "");
 
     // Handle European date format (DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY)
     // Convert to YYYY-MM-DD format
@@ -39,7 +48,17 @@ const dateFormatUrssaf = (date) => {
       return null; // Invalid date (e.g., Feb 30, April 31, month 15, etc.)
     }
 
-    // Add URSSAF-required timestamp
+    // Check if the date is today
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const inputDate = new Date(year, month - 1, day);
+
+    if (inputDate.getTime() === today.getTime()) {
+      // Date is today - use current time
+      return now.toISOString();
+    }
+
+    // Add URSSAF-required timestamp for past/future dates
     return normalizedDate + "T02:00:00Z";
   } catch (error) {
     // Return null for any parsing errors instead of throwing
@@ -48,4 +67,3 @@ const dateFormatUrssaf = (date) => {
 };
 
 module.exports = { dateFormatUrssaf };
-

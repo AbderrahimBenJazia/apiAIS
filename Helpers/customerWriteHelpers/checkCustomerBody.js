@@ -14,6 +14,10 @@ const {
   validateOptionalFields,
 } = require("./validators/validateOptionalFields");
 
+const { validateBody } = require("../General/validateBody");
+
+const { extractBodyValidFields } = require("../General/extractBodyValidFields");
+
 const ALLOWED_FIELDS = [
   "civilite",
   "nomNaissance",
@@ -36,36 +40,14 @@ const ALLOWED_FIELDS = [
   "info",
 ];
 
-const extractFields = (body) => {
-  const cleanBody = Object.create(null);
-
-  for (const field of ALLOWED_FIELDS) {
-    if (body.hasOwnProperty(field)) {
-      cleanBody[field] = body[field];
-    }
-  }
-
-  return cleanBody;
-};
-
-const validateInput = (body) => {
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return {
-      isValid: false,
-      errorMessage: "[checkBody] Le corps doit être un objet valide.",
-    };
-  }
-  return { isValid: true };
-};
-
-const checkBody = async (body) => {
+const checkCustomerBody = async (body) => {
   try {
     // 1. Validate input structure
-    const inputCheck = validateInput(body);
+    const inputCheck = validateBody(body);
     if (!inputCheck.isValid) return inputCheck;
 
     // 2. Extract and sanitize fields
-    const cleanBody = extractFields(body);
+    const cleanBody = extractBodyValidFields(body, ALLOWED_FIELDS);
     const validatedData = Object.create(null);
 
     // 3. Define validation pipeline
@@ -106,4 +88,4 @@ const checkBody = async (body) => {
   }
 };
 
-module.exports = { checkBody };
+module.exports = { checkCustomerBody };

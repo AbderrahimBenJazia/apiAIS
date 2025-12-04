@@ -4,7 +4,7 @@ const {
 const { authUser } = require("../Helpers/Auth/authUser");
 const { getUrssafToken } = require("../Helpers/Urssaf/getUrssafToken");
 const createApiResponse = require("../Helpers/Responses/apiResponse");
-const { checkBody } = require("../Helpers/customerWriteHelpers/checkBody");
+const { checkCustomerBody} = require("../Helpers/customerWriteHelpers/checkCustomerBody");
 const { parseRequestBody } = require("../Helpers/General/parseRequestBody");
 const {
   prepareUrssafData,
@@ -84,7 +84,7 @@ async function customerWrite(event) {
     delete clearedBody.bic;
     delete clearedBody.titulaire;
 
-    const checkBodyResult = await checkBody(body);
+    const checkBodyResult = await checkCustomerBody(body);
 
     if (!checkBodyResult.isValid) {
       return await logAndRespond(

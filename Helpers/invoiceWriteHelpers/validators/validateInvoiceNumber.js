@@ -1,7 +1,7 @@
 "use strict";
 
 const { findDictValue } = require("../../General/findDictValue");
-const { validateStringField } = require("./validateInvoiceFieldUtils");
+const { validateStringField } = require("./general validators/validateString");
 
 const POSSIBLE_FIELD_NAMES = [
   "numFactureTiers",
@@ -17,9 +17,7 @@ const validateInvoiceNumber = (body) => {
   const [value] = findDictValue(POSSIBLE_FIELD_NAMES, body);
 
   // Validate type and clean
-  const validateResult = validateStringField(value, fieldName, {
-    allowEmpty: false,
-  });
+  const validateResult = validateStringField(value, fieldName, true);
 
   if (!validateResult.isValid) return validateResult;
 
