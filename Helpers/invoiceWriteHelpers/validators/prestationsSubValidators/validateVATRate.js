@@ -1,12 +1,8 @@
 "use strict";
 
 const { findDictValue } = require("../../../General/findDictValue");
-const {
-  getFieldName,
-} = require("./getFieldName");
-const {
-  validateStringField,
-} = require("../general validators/validateString");
+const { getFieldName } = require("./getFieldName");
+const { validateStringField } = require("../general validators/validateString");
 
 const POSSIBLE_FIELD_NAMES = ["tauxTVA", "tva", "TVA"];
 
@@ -75,12 +71,5 @@ const validateVATRate = (prestation, prestationNumber) => {
     values: { tauxTVA },
   };
 };
-
-const main = () => {
-  const infos = validateVATRate({ tva: "-10%" }, 1);
-  console.log(infos);
-};
-
-main();
 
 module.exports = { validateVATRate };
