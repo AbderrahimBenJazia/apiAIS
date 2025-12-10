@@ -42,18 +42,32 @@ const validateUnitPrice = (prestation, prestationNumber, tauxTVA) => {
 
   const values = {};
 
-  // HT provided
-  if (htValue !== null) {
+  // Both HT and TTC provided - validate both amounts and return them
+  if (htValue !== null && ttcValue !== null) {
     const validateHT = validateAmount(htValue, `${fieldName}[HT]`, {
       decimals: 3,
     });
+    if (!validateHT.isValid) return validateHT;
 
+    const validateTTC = validateAmount(ttcValue, `${fieldName}[TTC]`, {
+      decimals: 3,
+    });
+    if (!validateTTC.isValid) return validateTTC;
+
+    values.mntUnitaireHT = validateHT.value;
+    values.mntUnitaireTTC = validateTTC.value;
+  }
+  // Only HT provided - validate and calculate TTC
+  else if (htValue !== null) {
+    const validateHT = validateAmount(htValue, `${fieldName}[HT]`, {
+      decimals: 3,
+    });
     if (!validateHT.isValid) return validateHT;
 
     values.mntUnitaireHT = validateHT.value;
     values.mntUnitaireTTC = validateHT.value * (1 + tauxTVA);
   }
-  // TTC provided
+  // Only TTC provided - validate and calculate HT
   else {
     const validateTTC = validateAmount(ttcValue, `${fieldName}[TTC]`, {
       decimals: 3,

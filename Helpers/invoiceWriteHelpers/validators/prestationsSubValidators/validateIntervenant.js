@@ -16,15 +16,15 @@ const validateIntervenant = (prestation, prestationNumber) => {
 
   const result = findDictValue(POSSIBLE_FIELD_NAMES, prestation);
 
+  const [value] = result;
+
   // Optional field - return empty if not found
-  if (!result) {
+  if (!value) {
     return { isValid: true, values: {} };
   }
 
-  const [value] = result;
-
   // Type validation
-  const typeValidation = validateStringField(value, fieldName, true);
+  const typeValidation = validateStringField(value, fieldName, false);
   if (!typeValidation.isValid) {
     return typeValidation;
   }

@@ -13,9 +13,12 @@ const validateCommentaire = (prestation, prestationNumber) => {
 
   const [value] = result;
 
+  if (!value) {
+       return { isValid: true, values: {} };
+  }
+
   const validateResult = validateStringField(value, fieldName);
 
-  // Currently, no specific validation rules for commentaire
   return validateResult;
 };
 
