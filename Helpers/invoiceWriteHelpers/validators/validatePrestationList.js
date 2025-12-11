@@ -1,6 +1,8 @@
 "use strict";
 
 const { findDictValue } = require("../../General/findDictValue");
+const { roundNumber } = require("../../General/roundNumber");
+const { validateSinglePrestation } = require("./validateSinglePrestation");
 
 const POSSIBLE_FIELD_NAMES = [
   "prestationListe",
@@ -9,7 +11,7 @@ const POSSIBLE_FIELD_NAMES = [
 ];
 
 const validatePrestationList = (body) => {
-  const [prestationListe, key] = findDictValue(POSSIBLE_FIELD_NAMES, body);
+  const [prestationListe] = findDictValue(POSSIBLE_FIELD_NAMES, body);
 
   if (!Array.isArray(prestationListe)) {
     return {
@@ -33,7 +35,28 @@ const validatePrestationList = (body) => {
     };
   }
 
-  return { isValid: true, data: validatedData };
+  const validatedData = Object.create(null);
+
+  let counter = 1;
+
+  validatedData.prestations = [];
+  let totalHt = 0;
+  let totalTtc = 0;
+  for (const prestation of prestationListe) {
+    const checkPrestation = validateSinglePrestation(prestation, counter);
+    if (!checkPrestation.isValid) return checkPrestation;
+
+    validatedData.prestations.push(checkPrestation.values);
+    counter++;
+    totalHt = roundNumber(totalHt + checkPrestation.values.mntPrestationHT, 2);
+    totalTtc = roundNumber(totalTtc + checkPrestation.values.mntPrestationTTC, 2);
+  }
+
+  return {
+    isValid: true,
+    values: validatedData,
+    totals: { totalHt, totalTtc },
+  };
 };
 
 module.exports = { validatePrestationList };

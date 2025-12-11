@@ -34,6 +34,9 @@ const searchCustomer = async (collection, professional, mode, value) => {
   };
 
   const config = searchConfig[mode];
+
+
+  
   if (!config) {
     throw new Error(`Mode invalide: ${mode}. Utilisez "cleExterne" ou "mail".`);
   }
@@ -45,11 +48,12 @@ const searchCustomer = async (collection, professional, mode, value) => {
     })
     .toArray();
 
+
   if (customers.length === 0) {
     return {
       found: false,
       client: null,
-      errorMessage: `[${config.fieldLabel}] ne permet pas de retrouver votre client. Veuillez vérifier que ce dernier est bien inscrit avec cette clé.`,
+      errorMessage: `l'${config.fieldLabel} ne permet pas de retrouver votre client. Veuillez vérifier que ce dernier est bien inscrit avec cette ${config.fieldLabel}.`,
     };
   }
 
@@ -57,7 +61,7 @@ const searchCustomer = async (collection, professional, mode, value) => {
     return {
       found: false,
       client: null,
-      errorMessage: `[${config.fieldLabel}] Plusieurs clients sont rattachés à la clé indiquée.`,
+      errorMessage: `Plusieurs clients sont rattachés à la clé indiquée.`,
     };
   }
 
@@ -101,7 +105,7 @@ const checkCustomer = async (professional, body) => {
       found: false,
       client: null,
       errorMessage:
-        "[adresseMail] Aucune clé externe ou adresse mail n'a été fournie pour identifier le client",
+        "Aucune clé externe ou adresse mail n'a été fournie pour identifier le client",
     };
   }
 
@@ -115,4 +119,4 @@ const checkCustomer = async (professional, body) => {
   return result;
 };
 
-module.exports = { checkCustomer};
+module.exports = { checkCustomer };

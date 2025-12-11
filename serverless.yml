@@ -59,3 +59,9 @@ functions:
       - httpApi:
           path: /customerWrite
           method: post
+  invoiceWrite:
+    handler: Handlers/invoiceWrite.invoiceWrite
+    events:
+      - httpApi:
+          path: /invoiceWrite
+          method: post

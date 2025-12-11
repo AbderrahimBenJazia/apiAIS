@@ -10,6 +10,8 @@ const {
   validatePrestationList,
 } = require("./validators/validatePrestationList");
 
+const { validateInvoiceTotals } = require("./validators/validateInvoiceTotals");
+
 const ALLOWED_FIELDS = [
   "adresseMail",
   "adressMail",
@@ -35,9 +37,21 @@ const ALLOWED_FIELDS = [
   "prestationListe",
   "prestationList",
   "prestations",
+  "mntFactureHT",
+  "mntFactureHt",
+  "mntFactureht",
+  "totalHT",
+  "totalHt",
+  "totalht",
+  "mntFactureTTC",
+  "mntFactureTtc",
+  "mntFacturettc",
+  "totalTTC",
+  "totalTtc",
+  "totalttc",
 ]; // not sure alternative field names (like adressMail...) are necessary here but are kept for backward compatibility with the original API in Realm
 
-const bodyCheck = async (body, professional) => {
+const checkInvoiceBody = async (body, professional) => {
   // 1. Validate input structure
   const inputCheck = validateBody(body);
   if (!inputCheck.isValid) return inputCheck;
@@ -56,42 +70,69 @@ const bodyCheck = async (body, professional) => {
 
   const customer = customerCheckResult.client;
 
-  // 3. Define validation pipeline
+  // 3. Execute validation pipeline
+  const validatedData = Object.create(null);
+  let calculatedTotals;
+
   const validations = [
-    { fn: validateInvoiceNumber },
-    { fn: validateInvoiceDates },
-    { fn: validateAcompte },
-    { fn: validatePrestationList },
+    validateInvoiceNumber,
+    validateInvoiceDates,
+    validateAcompte,
+    validatePrestationList,
   ];
 
-  // 4. Execute validation pipeline
-  const validatedData = Object.create(null);
-  for (const validation of validations) {
-    const result = validation.fn(cleanBody);
-
+  for (const validate of validations) {
+    const result = validate(cleanBody);
     if (!result.isValid) return result;
     Object.assign(validatedData, result.values);
+    if (result.totals) calculatedTotals = result.totals;
   }
 
-  return { isValid: true, data: validatedData };
+  // 4. Validate invoice totals
+  const totalsCheck = validateInvoiceTotals(cleanBody, calculatedTotals);
+  if (!totalsCheck.isValid) return totalsCheck;
+  Object.assign(validatedData, totalsCheck.values);
+
+  return { isValid: true, data: { validatedData, client: customer } };
 };
 
-const main = async () => {
+/* const main = async () => {
   const professional = "benjazia.abderrahim@gmail.com";
+
+  const prestation1 = {
+    codeNature: "100",
+    quantite: "2",
+    unite: "heure",
+    tauxTVA: "20%",
+    mntUnitaireHT: "50",
+    commentaire: "Prestation de test",
+  };
+
+  const prestation2 = {
+    codeNature: "Ménage-repassage",
+    quantite: "1",
+    unite: "heure",
+    tauxTVA: "20%",
+    mntUnitaireHT: "50",
+    commentaire: "Prestation de test",
+  };
 
   const body = {
     adresseMail: "dupont.martin@gmail.com",
     numFactureTiers: 1,
     dateFacture: "2025-12-03",
     acompte: "10.00131",
-    prestationListe: [],
+    prestationListe: [prestation1, prestation2],
+    mntFactureHT: 150,
+    mntFactureTTC: 180,
   };
 
   const response = await bodyCheck(body, professional);
 
   console.log(response);
+  console.log(response.data.prestations);
 };
 
-main();
+main(); */
 
-module.exports = { bodyCheck };
+module.exports = { checkInvoiceBody};

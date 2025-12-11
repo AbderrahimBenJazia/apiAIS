@@ -60,23 +60,4 @@ const validateSinglePrestation = (prestation, prestationNumber) => {
   return { isValid: true, values: amountsCheck.value };
 };
 
-const main = () => {
-  const prestation = {
-    codeNature: "garde d'enfant +6 ans",
-    quantite: "3",
-    unite: "Forfait",
-    mntUnitaireHT: 100,
-    mntUnitaireTTC: 121.01,
-    tauxTVA: 0.21,
-    commentaire: "",
-
-  };
-
-  const result = validateSinglePrestation(prestation, 1);
-
-  console.log(result);
-};
-
-main();
-
 module.exports = { validateSinglePrestation };
