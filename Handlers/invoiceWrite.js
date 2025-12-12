@@ -119,7 +119,7 @@ async function invoiceWrite(event) {
       validatedData
     );
 
-    console.log(tokenResponse.token)
+
 
     const responseUrssaf = await createInvoiceUrssaf(
       tokenResponse.token,
@@ -169,7 +169,7 @@ const main = async () => {
 
   const body = {
     adresseMail: "benjazia@gmail.com",
-    numFactureTiers: "1",
+    numFactureTiers: "xxxx211",
     dateFacture: "2025-12-03",
     /*     dateDEbutEmploi: "2027-12-01",
     dateFinEmploi: "2027-12-02", */
@@ -181,7 +181,7 @@ const main = async () => {
 
   const event = {
     headers: {
-      token: "AIS_nCO5z-kehnq-AyDrG-YYXwy-5X684-hSTbL-KaRDC-sSeOD-MqPP9-scng",
+      token: "AIS_sPBIu-E7H7F-7NfSq-KzG9N-fjg8g-4nCMf-0MUUT-TxxkE-n9vAd-I",
     },
     body,
   };
