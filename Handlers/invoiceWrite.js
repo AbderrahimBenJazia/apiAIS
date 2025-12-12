@@ -21,6 +21,9 @@ const {
 const {
   createInvoiceUrssaf,
 } = require("../Helpers/Urssaf/createInvoiceUrssaf");
+const {
+  checkIfNumberExists,
+} = require("../Helpers/invoiceWriteHelpers/checkIfNumberExists");
 
 /**
  * Helper to log activity and return API response
@@ -76,6 +79,24 @@ async function invoiceWrite(event) {
     }
 
     const { client, validatedData } = checkBodyResult.data;
+
+    const checkNumber = await checkIfNumberExists(
+      professional,
+      validatedData.numFactureTiers
+    );
+
+    if (!checkNumber.isValid) {
+      return await logAndRespond(
+        context,
+        {
+          error: checkNumber.errorMessage,
+          body,
+          type: "checkError",
+          userMessage: checkNumber.errorMessage,
+        },
+        checkNumber.errorMessage
+      );
+    }
 
     const isTest = authResponse.userData?.abonnement?.licence === "test";
     const tokenResponse = await getUrssafToken(keyPublic, keyPrivate, isTest);
@@ -146,7 +167,7 @@ const main = async () => {
 
   const body = {
     adresseMail: "benjazia@gmail.com",
-    numFactureTiers: 1,
+    numFactureTiers: "1",
     dateFacture: "2025-12-03",
     /*     dateDEbutEmploi: "2027-12-01",
     dateFinEmploi: "2027-12-02", */
@@ -158,13 +179,13 @@ const main = async () => {
 
   const event = {
     headers: {
-      token: "AIS_hIoGi-RFNwS-U9dPn-KVdsm-9Psrt-WOKWm-Lc1CR-lSzHA-SCnKC-ew8",
+      token: "AIS_nCO5z-kehnq-AyDrG-YYXwy-5X684-hSTbL-KaRDC-sSeOD-MqPP9-scng",
     },
     body,
   };
 
   const response = await invoiceWrite(event);
-  /*   console.log(response); */
+  console.log(response);
 };
 
 main();
