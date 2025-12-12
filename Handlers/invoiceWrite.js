@@ -14,6 +14,13 @@ const { parseRequestBody } = require("../Helpers/General/parseRequestBody");
 const { MESSAGES } = require("../Helpers/Responses/messages");
 
 const { logActivity } = require("../Helpers/General/logActivity");
+const {
+  prepareUrssafData,
+} = require("../Helpers/invoiceWriteHelpers/prepareUrssafData");
+
+const {
+  createInvoiceUrssaf,
+} = require("../Helpers/Urssaf/createInvoiceUrssaf");
 
 /**
  * Helper to log activity and return API response
@@ -46,14 +53,15 @@ async function invoiceWrite(event) {
       return authResponse.response;
     }
 
-    context = { ip, professional: authResponse.userData.professional };
+    const professional = authResponse?.userData?.professional;
 
-    /*     const { keyPublic, keyPrivate } = authResponse.userData?.urssaf; */
+    context = { ip, professional };
+
+    const { keyPublic, keyPrivate } = authResponse.userData?.urssaf;
 
     const { body } = parseRequestBody(event, context, "invoiceWrite");
 
-    const checkBodyResult = await checkInvoiceBody(body, context.professional);
-
+    const checkBodyResult = await checkInvoiceBody(body, professional);
     if (!checkBodyResult.isValid) {
       return await logAndRespond(
         context,
@@ -67,11 +75,42 @@ async function invoiceWrite(event) {
       );
     }
 
-    return createApiResponse(
+    const { client, validatedData } = checkBodyResult.data;
+
+    const isTest = authResponse.userData?.abonnement?.licence === "test";
+    const tokenResponse = await getUrssafToken(keyPublic, keyPrivate, isTest);
+
+    if (!tokenResponse.boolean) {
+      return await logAndRespond(
+        context,
+        {
+          error: "Urssaf token retrieval failed",
+          type: "tokenError",
+          userMessage: MESSAGES.URSSAF_ACCESS_DENIED,
+        },
+        MESSAGES.URSSAF_ACCESS_DENIED
+      );
+    }
+
+    const dataUrssaf = prepareUrssafData(
+      authResponse?.userData,
+      client,
+      validatedData
+    );
+
+    const responseUrssaf = await createInvoiceUrssaf(
+      tokenResponse.token,
+      dataUrssaf,
+      isTest
+    );
+
+    console.log(responseUrssaf);
+
+    /*     return createApiResponse(
       true,
       checkBodyResult.data,
       MESSAGES.INVOICE_VALIDATED
-    );
+    ); */
   } catch (error) {
     console.log(error);
     return await logAndRespond(
@@ -86,6 +125,48 @@ async function invoiceWrite(event) {
   }
 }
 
+const main = async () => {
+  const prestation1 = {
+    codeNature: "100",
+    quantite: "2",
+    unite: "heure",
+    tauxTVA: "20%",
+    mntUnitaireHT: "50",
+    commentaire: "Prestation de test",
+  };
 
+  const prestation2 = {
+    codeNature: "Ménage-repassage",
+    quantite: "1",
+    unite: "heure",
+    tauxTVA: "20%",
+    mntUnitaireHT: "50",
+    commentaire: "Prestation de test",
+  };
+
+  const body = {
+    adresseMail: "benjazia@gmail.com",
+    numFactureTiers: 1,
+    dateFacture: "2025-12-03",
+    /*     dateDEbutEmploi: "2027-12-01",
+    dateFinEmploi: "2027-12-02", */
+    acompte: "10.00131",
+    prestationListe: [prestation1, prestation2],
+    mntFactureHT: 150,
+    mntFactureTTC: 180,
+  };
+
+  const event = {
+    headers: {
+      token: "AIS_hIoGi-RFNwS-U9dPn-KVdsm-9Psrt-WOKWm-Lc1CR-lSzHA-SCnKC-ew8",
+    },
+    body,
+  };
+
+  const response = await invoiceWrite(event);
+  /*   console.log(response); */
+};
+
+main();
 
 module.exports = { invoiceWrite };

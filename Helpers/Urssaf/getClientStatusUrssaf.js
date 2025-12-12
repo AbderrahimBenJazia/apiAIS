@@ -29,11 +29,8 @@ const getClientStatusUrssaf = async (urssafToken, idClient, isTest) => {
     const statusClient = handleUrssafStatus(response.data.statut);
     responseInfos.success = true;
     responseInfos.status = statusClient;
-    
   } catch (error) {
-
-    console.log(error.response.status)
-    const status = 403;
+    const status = error?.response?.status;
 
     // Handle different HTTP error status codes
     if (status === 401) {
@@ -51,7 +48,7 @@ const getClientStatusUrssaf = async (urssafToken, idClient, isTest) => {
       responseInfos.errorCode = "INCONNUE";
       responseInfos.errorMessage = error?.message || "Unknown error";
     }
-    
+
     responseInfos.error = error.message || error;
   }
 
