@@ -119,6 +119,8 @@ async function invoiceWrite(event) {
       validatedData
     );
 
+    console.log(tokenResponse.token)
+
     const responseUrssaf = await createInvoiceUrssaf(
       tokenResponse.token,
       dataUrssaf,
