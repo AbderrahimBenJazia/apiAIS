@@ -59,9 +59,9 @@ const manageInvoiceRequest = async (urlUrssaf, invoiceInfos, headers) => {
     responseInfos.error = error.message || error;
   }
 
-/*   if (responseInfos.errorMessage) {
+  if (responseInfos.errorCode) {
     responseInfos.errorMessage = handleUrssafErrors(responseInfos);
-  } */
+  }
 
   return responseInfos;
 };
@@ -107,7 +107,7 @@ const createInvoiceUrssaf = async (urssafToken, invoiceInfos, isTest) => {
       isSameInvoice;
 
     if (!invoiceCreated) {
-      return responseUrssaf;
+      return { ...responseUrssaf, success: false };
     }
 
     const { statut, infoVirement, infoRejet, commentaireRejet } =

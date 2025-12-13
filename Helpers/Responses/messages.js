@@ -1,9 +1,6 @@
 "use strict";
 
-/**
- * Centralized error messages configuration
- * This file contains all error messages used throughout the application
- */
+
 
 const MESSAGES = {
   // Authentication errors
@@ -16,12 +13,16 @@ const MESSAGES = {
   INTERNAL_ERROR: "Erreur interne du serveur",
   UNAUTHORIZED_ACCESS: "Accès non autorisé",
   TOKEN_EXPIRED: "Le token utilisé est invalide.",
-  INVALID_BODY :"Invalid JSON in request body",
+  INVALID_BODY: "Invalid JSON in request body",
   // URSSAF errors
-  URSSAF_ACCESS_DENIED: "L'accès à l'API Tiers de prestation est refusé, veuillez réessayer ultèrieurement",
-  URSSAF_SERVICE_NOT_AVAILABLE:"Le service de l'URSSAF connaît une indisponibilité, veuillez réessayer ultérieurement.",
+  URSSAF_ACCESS_DENIED:
+    "L'accès à l'API Tiers de prestation est refusé, veuillez réessayer ultèrieurement",
+  URSSAF_SERVICE_NOT_AVAILABLE:
+    "Le service de l'URSSAF connaît une indisponibilité, veuillez réessayer ultérieurement.",
   // Success messages
-  CUSTOMER_CREATED_SUCCESS: "Particulier inscrit à l'Avance Immédiate avec succès."
+  CUSTOMER_CREATED_SUCCESS:
+    "Particulier inscrit à l'Avance Immédiate avec succès.",
+  INVOICE_CREATED_SUCCESS: "Facture créée et envoyée à l'Urssaf avec succès.",
 };
 
 module.exports = {

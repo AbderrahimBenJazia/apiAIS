@@ -35,6 +35,8 @@ const prepareUrssafData = (professionalData, customer, validatedData) => {
     inputPrestations: urssafPrestationListe,
   };
 
+
+
   return urssafData;
 };
 

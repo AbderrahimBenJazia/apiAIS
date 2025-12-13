@@ -4,7 +4,9 @@ const {
 const { authUser } = require("../Helpers/Auth/authUser");
 const { getUrssafToken } = require("../Helpers/Urssaf/getUrssafToken");
 const createApiResponse = require("../Helpers/Responses/apiResponse");
-const { checkCustomerBody} = require("../Helpers/customerWriteHelpers/checkCustomerBody");
+const {
+  checkCustomerBody,
+} = require("../Helpers/customerWriteHelpers/checkCustomerBody");
 const { parseRequestBody } = require("../Helpers/General/parseRequestBody");
 const {
   prepareUrssafData,
@@ -12,9 +14,8 @@ const {
 
 const { createClientUrssaf } = require("../Helpers/Urssaf/createClientUrssaf");
 const {
-  saveClientToDb,
-} = require("../Helpers/customerWriteHelpers/saveClientToDb");
-const { handleUrssafErrors } = require("../Helpers/Urssaf/handleUrssafErrors");
+  createEntry,
+} = require("../Helpers/Database/createEntry");
 
 const { MESSAGES } = require("../Helpers/Responses/messages");
 const {
@@ -166,24 +167,25 @@ async function customerWrite(event) {
     }
 
     if (!responseUrssaf.success) {
-      const errorMessage = handleUrssafErrors(responseUrssaf);
-
       return await logAndRespond(
         context,
         {
           body: clearedBody,
-          error: errorMessage,
           ...responseUrssaf,
           type: "urssafError",
-          userMessage: errorMessage,
+          userMessage: responseUrssaf.errorMessage,
         },
-        errorMessage
+        responseUrssaf.errorMessage
       );
     }
 
     const dbData = prepareDbData(acceptedData, authResponse.userData);
 
-    const responseDb = await saveClientToDb(dbData);
+    const responseDb = await createEntry(
+      dbData,
+      "providerDB",
+      "customer",
+    );
 
     if (!responseDb.success) {
       return await logAndRespond(

@@ -25,6 +25,15 @@ const {
   checkIfNumberExists,
 } = require("../Helpers/invoiceWriteHelpers/checkIfNumberExists");
 
+const {
+  prepareDbData,
+} = require("../Helpers/invoiceWriteHelpers/prepareDbData");
+
+const { createEntry } = require("../Helpers/Database/createEntry");
+
+const {
+  sendInvoiceFailMail,
+} = require("../Helpers/invoiceWriteHelpers/sendInvoiceFailMail");
 /**
  * Helper to log activity and return API response
  **/
@@ -37,6 +46,7 @@ const logAndRespond = async (
   data = null
 ) => {
   await logActivity(context, "invoiceWrite", logData);
+
   return createApiResponse(success, data, userMessage);
 };
 
@@ -50,6 +60,7 @@ async function invoiceWrite(event) {
   const { headers, ip } = extractRequestContext(event);
 
   try {
+
     const authResponse = await authUser(headers);
 
     if (!authResponse.isAuthnenticated) {
@@ -73,12 +84,15 @@ async function invoiceWrite(event) {
           body,
           type: "checkError",
           userMessage: checkBodyResult.errorMessage,
+          numFactureTiers: body.numFactureTiers,
         },
         checkBodyResult.errorMessage
       );
     }
 
     const { client, validatedData } = checkBodyResult.data;
+
+    clearedBody = validatedData;
 
     const checkNumber = await checkIfNumberExists(
       professional,
@@ -93,6 +107,7 @@ async function invoiceWrite(event) {
           body,
           type: "checkError",
           userMessage: checkNumber.errorMessage,
+          numFactureTiers: validatedData.numFactureTiers,
         },
         checkNumber.errorMessage
       );
@@ -108,6 +123,7 @@ async function invoiceWrite(event) {
           error: "Urssaf token retrieval failed",
           type: "tokenError",
           userMessage: MESSAGES.URSSAF_ACCESS_DENIED,
+          numFactureTiers: validatedData.numFactureTiers,
         },
         MESSAGES.URSSAF_ACCESS_DENIED
       );
@@ -119,23 +135,82 @@ async function invoiceWrite(event) {
       validatedData
     );
 
-
-
     const responseUrssaf = await createInvoiceUrssaf(
       tokenResponse.token,
       dataUrssaf,
       isTest
     );
 
-    console.log(responseUrssaf);
+    if (!responseUrssaf.success) {
+      await sendInvoiceFailMail(
+        professional,
+        responseUrssaf.errorMessage,
+        responseUrssaf,
+        clearedBody
+      );
 
-    /*     return createApiResponse(
+      return await logAndRespond(
+        context,
+        {
+          body: clearedBody,
+          ...responseUrssaf,
+          type: "urssafError",
+          numFactureTiers: validatedData.numFactureTiers,
+          userMessage: responseUrssaf.errorMessage,
+        },
+        responseUrssaf.errorMessage
+      );
+    }
+
+    const dbData = prepareDbData(
+      authResponse.userData,
+      client,
+      validatedData,
+      responseUrssaf
+    );
+
+    const responseDb = await createEntry(dbData, "providerDB", "bill");
+
+    if (!responseDb.success) {
+      return await logAndRespond(
+        context,
+        {
+          body: clearedBody,
+          error: responseDb.error,
+          attempts: responseDb.attempts,
+          idFacture: responseUrssaf.idFacture,
+          numFactureTiers: validatedData.numFactureTiers,
+          type: "dbError",
+          userMessage: MESSAGES.INTERNAL_ERROR,
+        },
+        MESSAGES.INTERNAL_ERROR
+      );
+    }
+
+    return await logAndRespond(
+      context,
+      {
+        body: clearedBody,
+        error: null,
+        insertedId: responseDb.insertedId,
+        idFacture: responseUrssaf.idFacture,
+        numFactureTiers: validatedData.numFactureTiers,
+        attempts: responseDb.attempts,
+        type: "success",
+        userMessage: MESSAGES.INVOICE_CREATED_SUCCESS,
+      },
+      MESSAGES.INVOICE_CREATED_SUCCESS,
       true,
-      checkBodyResult.data,
-      MESSAGES.INVOICE_VALIDATED
-    ); */
+      clearedBody
+    );
   } catch (error) {
-    console.log(error);
+    await sendInvoiceFailMail(
+      context?.professional,
+      error?.message || error,
+      null,
+      JSON.parse(event.body)
+    );
+
     return await logAndRespond(
       context,
       {
@@ -149,6 +224,10 @@ async function invoiceWrite(event) {
 }
 
 const main = async () => {
+  const headers = {
+    token: "AIS_cSUCs-Z43mY-AQub7-4dpcV-gNbFz-VtTEc-FkbCi-6qI6i-vX5pp-wYTmc",
+  };
+
   const prestation1 = {
     codeNature: "100",
     quantite: "2",
@@ -168,8 +247,8 @@ const main = async () => {
   };
 
   const body = {
-    adresseMail: "benjazia@gmail.com",
-    numFactureTiers: "xxxx211",
+    adresseMail: "benjazia.abou@gmail.com",
+    numFactureTiers: 1,
     dateFacture: "2025-12-03",
     /*     dateDEbutEmploi: "2027-12-01",
     dateFinEmploi: "2027-12-02", */
@@ -179,17 +258,12 @@ const main = async () => {
     mntFactureTTC: 180,
   };
 
-  const event = {
-    headers: {
-      token: "AIS_sPBIu-E7H7F-7NfSq-KzG9N-fjg8g-4nCMf-0MUUT-TxxkE-n9vAd-I",
-    },
-    body,
-  };
+  const event = { body: JSON.stringify(body), headers };
 
   const response = await invoiceWrite(event);
+
   console.log(response);
 };
 
 main();
-
 module.exports = { invoiceWrite };

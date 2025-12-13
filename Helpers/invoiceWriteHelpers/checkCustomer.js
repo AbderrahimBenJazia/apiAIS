@@ -14,6 +14,11 @@ const searchCustomer = async (collection, professional, mode, value) => {
     };
   }
 
+  // Helper to escape special regex characters
+  const escapeRegex = (str) => {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  };
+
   const baseQuery = {
     professional,
     status: null,
@@ -35,16 +40,18 @@ const searchCustomer = async (collection, professional, mode, value) => {
 
   const config = searchConfig[mode];
 
-
-  
   if (!config) {
     throw new Error(`Mode invalide: ${mode}. Utilisez "cleExterne" ou "mail".`);
   }
 
+  // Use exact match with case-insensitive option
   const customers = await collection
     .find({
       ...baseQuery,
-      [config.field]: { $regex: config.normalizedValue, $options: "i" },
+      [config.field]: { 
+        $regex: `^${escapeRegex(config.normalizedValue)}$`, 
+        $options: "i" 
+      },
     })
     .toArray();
 
