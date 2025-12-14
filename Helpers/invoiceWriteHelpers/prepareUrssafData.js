@@ -1,7 +1,7 @@
 "use strict";
 
 const { dateFormatUrssaf } = require("../formatters/dateFormatUrssaf");
-
+const {roundNumber}=require("../General/roundNumber");
 const prepareUrssafData = (professionalData, customer, validatedData) => {
   // Prepare prestations list for URSSAF
   const urssafPrestationListe = validatedData.prestations.map((prestation) => {
@@ -13,7 +13,7 @@ const prepareUrssafData = (professionalData, customer, validatedData) => {
       mntPrestationTTC: prestation.mntPrestationTTC,
       mntPrestationHT: prestation.mntPrestationHT,
       mntPrestationTVA:
-        prestation.mntPrestationTTC - prestation.mntPrestationHT,
+        roundNumber(prestation.mntPrestationTTC - prestation.mntPrestationHT),
       complement1: prestation.commentaire || "",
       complement2: prestation.intervenant || professionalData.information.nova,
     };
@@ -28,14 +28,12 @@ const prepareUrssafData = (professionalData, customer, validatedData) => {
     dateFacture: validatedData.dateFacture,
     dateDebutEmploi: validatedData.dateDebutEmploi,
     dateFinEmploi: validatedData.dateFinEmploi,
-    mntAcompte: validatedData.mntAcompte || 0,
+    mntAcompte:  validatedData.mntAcompte  ? undefined : validatedData.mntAcompte,
     dateVersementAcompte: validatedData.dateVersementAcompte,
     mntFactureTTC: validatedData.mntFactureTTC,
     mntFactureHT: validatedData.mntFactureHT,
     inputPrestations: urssafPrestationListe,
   };
-
-
 
   return urssafData;
 };

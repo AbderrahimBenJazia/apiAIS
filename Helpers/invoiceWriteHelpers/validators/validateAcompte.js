@@ -21,7 +21,7 @@ const validateAcompte = (body) => {
   if (!value) {
     return {
       isValid: true,
-      values: { mntAcompte: "0" },
+      values: { mntAcompte: null},
     };
   }
   

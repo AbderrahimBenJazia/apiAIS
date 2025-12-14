@@ -1,27 +1,26 @@
 const {
-  extractRequestContext,
-} = require("../Helpers/General/extractRequestContext");
-const { authUser } = require("../Helpers/Auth/authUser");
-const { getUrssafToken } = require("../Helpers/Urssaf/getUrssafToken");
-const createApiResponse = require("../Helpers/Responses/apiResponse");
+  authenticateAndGetToken,
+} = require("../Helpers/Auth/authenticateAndGetToken");
+const { logAndRespond } = require("../Helpers/Responses/logAndRespond");
+const {
+  handleValidationError,
+} = require("../Helpers/Responses/handleValidationError");
+const { logActivity } = require("../Helpers/General/logActivity");
+
 const {
   checkCustomerBody,
 } = require("../Helpers/customerWriteHelpers/checkCustomerBody");
-const { parseRequestBody } = require("../Helpers/General/parseRequestBody");
 const {
   prepareUrssafData,
 } = require("../Helpers/customerWriteHelpers/prepareUrssafData");
 
 const { createClientUrssaf } = require("../Helpers/Urssaf/createClientUrssaf");
-const {
-  createEntry,
-} = require("../Helpers/Database/createEntry");
+const { createEntry } = require("../Helpers/Database/createEntry");
 
 const { MESSAGES } = require("../Helpers/Responses/messages");
 const {
   prepareDbData,
 } = require("../Helpers/customerWriteHelpers/prepareDbData");
-const { logActivity } = require("../Helpers/General/logActivity");
 
 const {
   checkIsUnique,
@@ -32,50 +31,26 @@ const {
 } = require("../Helpers/customerWriteHelpers/communes/getCountryCode");
 
 /**
- * Helper to log activity and return API response
- **/
-
-const logAndRespond = async (
-  context,
-  logData,
-  userMessage,
-  success = false,
-  data = null
-) => {
-  await logActivity(context, "customerWrite", logData);
-  return createApiResponse(success, data, userMessage);
-};
-
-/**
  * Main function to handle customer write requests
  **/
 
 async function customerWrite(event) {
-  let context = {};
   let clearedBody = {};
-  const { headers, ip } = extractRequestContext(event);
 
   try {
-    const authResponse = await authUser(headers);
+    // Authenticate and get URSSAF token
+    const authResult = await authenticateAndGetToken(event, "customerWrite");
+    if (authResult.failed) return authResult.response;
 
-    if (!authResponse.isAuthnenticated) {
-      return authResponse.response;
-    }
+    const { context, body, authResponse, tokenResponse, isTest } = authResult;
 
-    context = { ip, professional: authResponse.userData.professional };
-
-    const { keyPublic, keyPrivate } = authResponse.userData?.urssaf;
-
-    const { body } = parseRequestBody(event, context, "customerWrite");
-
+    // Handle countries info request
     const info = body.info;
-
     if (["pays", "true", true].includes(info)) {
       await logActivity(context, "customerWrite", {
         error: null,
         type: "infoPays",
       });
-
       return countriesList;
     }
 
@@ -88,15 +63,12 @@ async function customerWrite(event) {
     const checkBodyResult = await checkCustomerBody(body);
 
     if (!checkBodyResult.isValid) {
-      return await logAndRespond(
+      return await handleValidationError(
+        "customerWrite",
         context,
-        {
-          error: checkBodyResult.errorMessage,
-          body: clearedBody,
-          type: "checkError",
-          userMessage: checkBodyResult.errorMessage,
-        },
-        checkBodyResult.errorMessage
+        "checkError",
+        checkBodyResult.errorMessage,
+        { body: clearedBody }
       );
     }
 
@@ -109,29 +81,21 @@ async function customerWrite(event) {
     );
 
     if (!isUniqueResult.isUnique) {
-      return await logAndRespond(
+      return await handleValidationError(
+        "customerWrite",
         context,
-        {
-          error: isUniqueResult.errorMessage,
-          body: clearedBody,
-          type: "clientExistsError",
-          userMessage: isUniqueResult.errorMessage,
-        },
-        isUniqueResult.errorMessage
+        "clientExistsError",
+        isUniqueResult.errorMessage,
+        { body: clearedBody }
       );
     }
 
-    const isTest = authResponse.userData?.abonnement?.licence === "test";
-    const tokenResponse = await getUrssafToken(keyPublic, keyPrivate, isTest);
-
+    // Check URSSAF token
     if (!tokenResponse.boolean) {
-      return await logAndRespond(
+      return await handleValidationError(
+        "customerWrite",
         context,
-        {
-          error: "Urssaf token retrieval failed",
-          type: "tokenError",
-          userMessage: MESSAGES.URSSAF_ACCESS_DENIED,
-        },
+        "tokenError",
         MESSAGES.URSSAF_ACCESS_DENIED
       );
     }
@@ -167,42 +131,39 @@ async function customerWrite(event) {
     }
 
     if (!responseUrssaf.success) {
-      return await logAndRespond(
+      return await handleValidationError(
+        "customerWrite",
         context,
+        "urssafError",
+        responseUrssaf.errorMessage,
         {
           body: clearedBody,
           ...responseUrssaf,
-          type: "urssafError",
-          userMessage: responseUrssaf.errorMessage,
-        },
-        responseUrssaf.errorMessage
+        }
       );
     }
 
     const dbData = prepareDbData(acceptedData, authResponse.userData);
 
-    const responseDb = await createEntry(
-      dbData,
-      "providerDB",
-      "customer",
-    );
+    const responseDb = await createEntry(dbData, "providerDB", "customer");
 
     if (!responseDb.success) {
-      return await logAndRespond(
+      return await handleValidationError(
+        "customerWrite",
         context,
+        "dbError",
+        MESSAGES.INTERNAL_ERROR,
         {
           body: clearedBody,
           error: responseDb.error,
           attempts: responseDb.attempts,
-          urssafKeyCustomer: acceptedData.urssafKeyCustomer,
-          type: "dbError",
-          userMessage: MESSAGES.INTERNAL_ERROR,
-        },
-        MESSAGES.INTERNAL_ERROR
+          numeroClient: responseUrssaf.numeroClient,
+        }
       );
     }
 
     return await logAndRespond(
+      "customerWrite",
       context,
       {
         body: clearedBody,
@@ -217,16 +178,45 @@ async function customerWrite(event) {
       true
     );
   } catch (error) {
-    return await logAndRespond(
+    return await handleValidationError(
+      "customerWrite",
       context,
+      "internalError",
+      MESSAGES.INTERNAL_ERROR,
       {
         body: clearedBody,
         error: error.message || error,
-        userMessage: MESSAGES.INTERNAL_ERROR,
-      },
-      MESSAGES.INTERNAL_ERROR
+      }
     );
   }
 }
 
 module.exports = { customerWrite };
+
+const main = async () => {
+  const headers = {
+    token: "AIS_vtuhD-T5ybq-Q2M8U-tkjnn-2LauM-WZNoe-hn3VF-YRUXF-saw0M-ufWE",
+  };
+
+  const body = {
+    civilite: "1",
+    nomNaissance: "BENdadaZIA",
+    nomUsage: "Ben ",
+    prenoms: "Erir",
+    numeroTelephonePortable: "0683168950",
+    adresseMail: "benjxxe@gmail.com",
+    libelleVoie: "15 rues des pommes",
+    libelleCommuneResidence: "Nice",
+    codePostal: "06000",
+    dateNaissance: "15/09/2000",
+    codePaysNaissance: 99351,
+    bic: "AGRIFRPPXXX",
+    iban: "FR76 3000 6000 0112 3456 7890 189",
+  };
+
+  const event = { body: JSON.stringify(body), headers };
+
+  const response = await customerWrite(event);
+  console.log(response);
+};
+main();

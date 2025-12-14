@@ -8,7 +8,7 @@ const urlMongo =
 
 const main = async () => {
   const headers = {
-    token: "AIS_StY5g-ePKhR-C3aKW-ngzxo-ibFVg-LlUjS-roaRD-Ad6uj-dVsn2-B51eI",
+    token: "AIS_hQaCy-nV1Im-QsfZk-KUoPM-XSr3V-lfNOZ-2sPry-1c4oI-4nfAN-uId78",
   };
 
   const body = {

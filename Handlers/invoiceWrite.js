@@ -1,19 +1,16 @@
 const {
-  extractRequestContext,
-} = require("../Helpers/General/extractRequestContext");
-const { authUser } = require("../Helpers/Auth/authUser");
-const { getUrssafToken } = require("../Helpers/Urssaf/getUrssafToken");
-const createApiResponse = require("../Helpers/Responses/apiResponse");
+  authenticateAndGetToken,
+} = require("../Helpers/Auth/authenticateAndGetToken");
+const { logAndRespond } = require("../Helpers/Responses/logAndRespond");
+const {
+  handleValidationError,
+} = require("../Helpers/Responses/handleValidationError");
 
 const {
   checkInvoiceBody,
 } = require("../Helpers/invoiceWriteHelpers/checkInvoiceBody");
 
-const { parseRequestBody } = require("../Helpers/General/parseRequestBody");
-
 const { MESSAGES } = require("../Helpers/Responses/messages");
-
-const { logActivity } = require("../Helpers/General/logActivity");
 const {
   prepareUrssafData,
 } = require("../Helpers/invoiceWriteHelpers/prepareUrssafData");
@@ -34,98 +31,69 @@ const { createEntry } = require("../Helpers/Database/createEntry");
 const {
   sendInvoiceFailMail,
 } = require("../Helpers/invoiceWriteHelpers/sendInvoiceFailMail");
-/**
- * Helper to log activity and return API response
- **/
-
-const logAndRespond = async (
-  context,
-  logData,
-  userMessage,
-  success = false,
-  data = null
-) => {
-  await logActivity(context, "invoiceWrite", logData);
-
-  return createApiResponse(success, data, userMessage);
-};
 
 /**
- * Main function to handle customer write requests
+ * Main function to handle invoice write requests
  **/
 
 async function invoiceWrite(event) {
-  let context = {};
   let clearedBody = {};
-  const { headers, ip } = extractRequestContext(event);
 
   try {
+    // Authenticate and get URSSAF token
+    const authResult = await authenticateAndGetToken(event, "invoiceWrite");
 
-    const authResponse = await authUser(headers);
+    if (authResult.failed) return authResult.response;
 
-    if (!authResponse.isAuthnenticated) {
-      return authResponse.response;
-    }
+    const {
+      context,
+      body,
+      authResponse,
+      tokenResponse,
+      isTest,
+      professional,
+    } = authResult;
 
-    const professional = authResponse?.userData?.professional;
-
-    context = { ip, professional };
-
-    const { keyPublic, keyPrivate } = authResponse.userData?.urssaf;
-
-    const { body } = parseRequestBody(event, context, "invoiceWrite");
-
+    // Check invoice body
     const checkBodyResult = await checkInvoiceBody(body, professional);
     if (!checkBodyResult.isValid) {
-      return await logAndRespond(
+      return await handleValidationError(
+        "invoiceWrite",
         context,
-        {
-          error: checkBodyResult.errorMessage,
-          body,
-          type: "checkError",
-          userMessage: checkBodyResult.errorMessage,
-          numFactureTiers: body.numFactureTiers,
-        },
-        checkBodyResult.errorMessage
+        "checkError",
+        checkBodyResult.errorMessage,
+        { body, numFactureTiers: body.numFactureTiers }
       );
     }
 
     const { client, validatedData } = checkBodyResult.data;
+    const numFactureTiers = validatedData.numFactureTiers;
 
     clearedBody = validatedData;
 
     const checkNumber = await checkIfNumberExists(
       professional,
-      validatedData.numFactureTiers
+      numFactureTiers
     );
 
     if (!checkNumber.isValid) {
-      return await logAndRespond(
+      return await handleValidationError(
+        "invoiceWrite",
         context,
-        {
-          error: checkNumber.errorMessage,
-          body,
-          type: "checkError",
-          userMessage: checkNumber.errorMessage,
-          numFactureTiers: validatedData.numFactureTiers,
-        },
-        checkNumber.errorMessage
+        "checkError",
+        checkNumber.errorMessage,
+        { body, numFactureTiers }
       );
     }
 
-    const isTest = authResponse.userData?.abonnement?.licence === "test";
-    const tokenResponse = await getUrssafToken(keyPublic, keyPrivate, isTest);
-
+    // Check URSSAF token
     if (!tokenResponse.boolean) {
-      return await logAndRespond(
+      return await handleValidationError(
+        "invoiceWrite",
         context,
-        {
-          error: "Urssaf token retrieval failed",
-          type: "tokenError",
-          userMessage: MESSAGES.URSSAF_ACCESS_DENIED,
-          numFactureTiers: validatedData.numFactureTiers,
-        },
-        MESSAGES.URSSAF_ACCESS_DENIED
+        "tokenError",
+        MESSAGES.URSSAF_ACCESS_DENIED,
+        { numFactureTiers }
       );
     }
 
@@ -149,16 +117,16 @@ async function invoiceWrite(event) {
         clearedBody
       );
 
-      return await logAndRespond(
+      return await handleValidationError(
+        "invoiceWrite",
         context,
+        "urssafError",
+        responseUrssaf.errorMessage,
         {
           body: clearedBody,
+          numFactureTiers,
           ...responseUrssaf,
-          type: "urssafError",
-          numFactureTiers: validatedData.numFactureTiers,
-          userMessage: responseUrssaf.errorMessage,
-        },
-        responseUrssaf.errorMessage
+        }
       );
     }
 
@@ -172,29 +140,30 @@ async function invoiceWrite(event) {
     const responseDb = await createEntry(dbData, "providerDB", "bill");
 
     if (!responseDb.success) {
-      return await logAndRespond(
+      return await handleValidationError(
+        "invoiceWrite",
         context,
+        "dbError",
+        MESSAGES.INTERNAL_ERROR,
         {
           body: clearedBody,
           error: responseDb.error,
           attempts: responseDb.attempts,
           idFacture: responseUrssaf.idFacture,
-          numFactureTiers: validatedData.numFactureTiers,
-          type: "dbError",
-          userMessage: MESSAGES.INTERNAL_ERROR,
-        },
-        MESSAGES.INTERNAL_ERROR
+          numFactureTiers,
+        }
       );
     }
 
     return await logAndRespond(
+      "invoiceWrite",
       context,
       {
         body: clearedBody,
         error: null,
         insertedId: responseDb.insertedId,
         idFacture: responseUrssaf.idFacture,
-        numFactureTiers: validatedData.numFactureTiers,
+        numFactureTiers,
         attempts: responseDb.attempts,
         type: "success",
         userMessage: MESSAGES.INVOICE_CREATED_SUCCESS,
@@ -211,51 +180,57 @@ async function invoiceWrite(event) {
       JSON.parse(event.body)
     );
 
-    return await logAndRespond(
+    return await handleValidationError(
+      "invoiceWrite",
       context,
+      "internalError",
+      MESSAGES.INTERNAL_ERROR,
       {
         body: clearedBody,
         error: error.message || error,
-        userMessage: MESSAGES.INTERNAL_ERROR,
-      },
-      MESSAGES.INTERNAL_ERROR
+      }
     );
   }
 }
 
 const main = async () => {
   const headers = {
-    token: "AIS_cSUCs-Z43mY-AQub7-4dpcV-gNbFz-VtTEc-FkbCi-6qI6i-vX5pp-wYTmc",
+    token: "AIS_vtuhD-T5ybq-Q2M8U-tkjnn-2LauM-WZNoe-hn3VF-YRUXF-saw0M-ufWE",
   };
 
   const prestation1 = {
-    codeNature: "100",
-    quantite: "2",
-    unite: "heure",
-    tauxTVA: "20%",
-    mntUnitaireHT: "50",
-    commentaire: "Prestation de test",
+    codeNature: 90,
+    unite: "FORFAIT",
+    quantite: 1,
+    tauxTVA: 0.02,
+    mntUnitaireTTC: "448",
+    nomActivite: "Garde d'enfant + 6 ans",
+    mntUnitaireHT: 439.2156862745098,
   };
 
-  const prestation2 = {
-    codeNature: "Ménage-repassage",
-    quantite: "1",
-    unite: "heure",
-    tauxTVA: "20%",
-    mntUnitaireHT: "50",
-    commentaire: "Prestation de test",
-  };
+  /*   const prestation2 = {
+    codeNature: 90,
+    unite: "FORFAIT",
+    quantite: 1,
+    tauxTVA: 0.1,
+    mntUnitaireTTC: "33.13",
+    nomActivite: "Garde d'enfant + 6 ans",
+    mntUnitaireHT: 30.118181818181817,
+  }; */
 
   const body = {
     adresseMail: "benjazia.abou@gmail.com",
-    numFactureTiers: 1,
-    dateFacture: "2025-12-03",
-    /*     dateDEbutEmploi: "2027-12-01",
-    dateFinEmploi: "2027-12-02", */
-    acompte: "10.00131",
-    prestationListe: [prestation1, prestation2],
-    mntFactureHT: 150,
-    mntFactureTTC: 180,
+    numFactureTiers: "test_131310121",
+
+    dateFacture: "17/11/2025",
+
+    dateDebutEmploi: "30/11/2025",
+
+    dateFinEmploi: "30/11/2025",
+
+    mntFactureTTC: "448",
+
+    prestationListe: [prestation1 /* , prestation2 */],
   };
 
   const event = { body: JSON.stringify(body), headers };

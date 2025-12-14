@@ -15,8 +15,13 @@ const parseRequestBody = (
   }
 
   try {
-    const requestBody =
+    let requestBody =
       typeof event.body === "string" ? JSON.parse(event.body) : event.body;
+    
+    // If body is an array, take the first element
+    if (Array.isArray(requestBody)) {
+      requestBody = requestBody[0] || {};
+    }
     
     const pagination = parsePagination(requestBody);
     
