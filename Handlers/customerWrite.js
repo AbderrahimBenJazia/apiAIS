@@ -36,13 +36,15 @@ const {
 
 async function customerWrite(event) {
   let clearedBody = {};
+  let context = null;
 
   try {
     // Authenticate and get URSSAF token
     const authResult = await authenticateAndGetToken(event, "customerWrite");
     if (authResult.failed) return authResult.response;
 
-    const { context, body, authResponse, tokenResponse, isTest } = authResult;
+    const { body, authResponse, tokenResponse, isTest } = authResult;
+    context = authResult.context;
 
     // Handle countries info request
     const info = body.info;

@@ -38,6 +38,8 @@ const {
 
 async function invoiceWrite(event) {
   let clearedBody = {};
+  let context = null;
+  let professional = null;
 
   try {
     // Authenticate and get URSSAF token
@@ -45,14 +47,9 @@ async function invoiceWrite(event) {
 
     if (authResult.failed) return authResult.response;
 
-    const {
-      context,
-      body,
-      authResponse,
-      tokenResponse,
-      isTest,
-      professional,
-    } = authResult;
+    const { body, authResponse, tokenResponse, isTest } = authResult;
+    context = authResult.context;
+    professional = authResult.professional;
 
     // Check invoice body
     const checkBodyResult = await checkInvoiceBody(body, professional);

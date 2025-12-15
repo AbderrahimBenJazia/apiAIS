@@ -1,64 +1,57 @@
 const {
-  extractRequestContext,
-} = require("../Helpers/General/extractRequestContext");
-
-const { authUser } = require("../Helpers/Auth/authUser");
-
-const { getUrssafToken } = require("../Helpers/Urssaf/getUrssafToken");
-
-const createApiResponse = require("../Helpers/Responses/apiResponse");
-
-const { parseRequestBody } = require("../Helpers/General/parseRequestBody");
+  authenticateAndGetToken,
+} = require("../Helpers/Auth/authenticateAndGetToken");
+const { logAndRespond } = require("../Helpers/Responses/logAndRespond");
+const {
+  handleValidationError,
+} = require("../Helpers/Responses/handleValidationError");
 
 const { MESSAGES } = require("../Helpers/Responses/messages");
 
-const { logActivity } = require("../Helpers/General/logActivity");
-
-const logAndRespond = async (
-  context,
-  logData,
-  userMessage,
-  success = false,
-  data = null
-) => {
-  await logActivity(context, "invoiceUpdateUrssaf", logData);
-
-  return createApiResponse(success, data, userMessage);
-};
-
-/**
- * Main function to handle customer write requests
- **/
-
 async function invoiceUpdateUrssaf(event) {
-  let context = {};
   let clearedBody = {};
-  const { headers, ip } = extractRequestContext(event);
+  let context = null;
+  let professional = null;
 
   try {
-    const authResponse = await authUser(headers);
+    // Authenticate and get URSSAF token
+    const authResult = await authenticateAndGetToken(
+      event,
+      "invoiceUpdateUrssaf"
+    );
 
-    if (!authResponse.isAuthnenticated) {
-      return authResponse.response;
-    }
+    if (authResult.failed) return authResult.response;
 
-    const professional = authResponse?.userData?.professional;
+    const { body, authResponse, tokenResponse, isTest } = authResult;
+    context = authResult.context;
+    professional = authResult.professional;
 
-    context = { ip, professional };
 
-    const { keyPublic, keyPrivate } = authResponse.userData?.urssaf;
 
-    const { body } = parseRequestBody(event, context, "invoiceWrite");
+
+
+
+
+
+
+
+
+
+
+
+    
   } catch (error) {
-    return await logAndRespond(
+    return await handleValidationError(
+      "invoiceUpdateUrssaf",
       context,
+      "internalError",
+      MESSAGES.INTERNAL_ERROR,
       {
         body: clearedBody,
         error: error.message || error,
-        userMessage: MESSAGES.INTERNAL_ERROR,
-      },
-      MESSAGES.INTERNAL_ERROR
+      }
     );
   }
 }
+
 module.exports = { invoiceUpdateUrssaf };
